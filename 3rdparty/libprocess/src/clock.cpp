@@ -22,7 +22,11 @@
 
 using std::list;
 using std::map;
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 using std::recursive_mutex;
+#endif /* _WIN32 */
 using std::set;
 
 namespace process {
@@ -31,7 +35,11 @@ namespace process {
 // timer so that we can have two timers that have the same timeout. We
 // exploit that the map is SORTED!
 static map<Time, list<Timer>>* timers = new map<Time, list<Timer>>();
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 static recursive_mutex* timers_mutex = new recursive_mutex();
+#endif /* _WIN32 */
 
 
 // We namespace the clock related variables to keep them well
@@ -126,6 +134,10 @@ void scheduleTick(const map<Time, list<Timer>>& timers, set<Time>* ticks)
 
 void tick(const Time& time)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   list<Timer> timedout;
 
   synchronized (timers_mutex) {
@@ -183,6 +195,7 @@ void tick(const Time& time)
       clock::settling = false;
     }
   }
+#endif /* _WIN32 */
 }
 
 } // namespace clock {
@@ -202,6 +215,10 @@ Time Clock::now()
 
 Time Clock::now(ProcessBase* process)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   synchronized (timers_mutex) {
     if (Clock::paused()) {
       if (process != NULL) {
@@ -226,6 +243,7 @@ Time Clock::now(ProcessBase* process)
                << time.error();
   }
   return time.get();
+#endif /* _WIN32 */
 }
 
 
@@ -233,6 +251,10 @@ Timer Clock::timer(
     const Duration& duration,
     const lambda::function<void(void)>& thunk)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   static uint64_t id = 1; // Start at 1 since Timer() instances use id 0.
 
   // Assumes Clock::now() does Clock::now(__process__).
@@ -262,11 +284,16 @@ Timer Clock::timer(
   }
 
   return timer;
+#endif /* _WIN32 */
 }
 
 
 bool Clock::cancel(const Timer& timer)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   bool canceled = false;
   synchronized (timers_mutex) {
     // Check if the timeout is still pending, and if so, erase it. In
@@ -283,11 +310,16 @@ bool Clock::cancel(const Timer& timer)
   }
 
   return canceled;
+#endif /* _WIN32 */
 }
 
 
 void Clock::pause()
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   process::initialize(); // To make sure the event loop is ready.
 
   synchronized (timers_mutex) {
@@ -309,6 +341,7 @@ void Clock::pause()
   // Note that after pausing the clock, the existing scheduled
   // 'ticks' might still fire, but since 'paused' == true no "time"
   // will actually have passed, so no timer will actually fire.
+#endif /* _WIN32 */
 }
 
 
@@ -320,6 +353,10 @@ bool Clock::paused()
 
 void Clock::resume()
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   process::initialize(); // To make sure the event loop is ready.
 
   synchronized (timers_mutex) {
@@ -334,11 +371,16 @@ void Clock::resume()
       clock::scheduleTick(*timers, clock::ticks);
     }
   }
+#endif /* _WIN32 */
 }
 
 
 void Clock::advance(const Duration& duration)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   synchronized (timers_mutex) {
     if (clock::paused) {
       *clock::advanced += duration;
@@ -352,11 +394,16 @@ void Clock::advance(const Duration& duration)
       clock::scheduleTick(*timers, clock::ticks);
     }
   }
+#endif /* _WIN32 */
 }
 
 
 void Clock::advance(ProcessBase* process, const Duration& duration)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   synchronized (timers_mutex) {
     if (clock::paused) {
       Time current = now(process);
@@ -371,11 +418,16 @@ void Clock::advance(ProcessBase* process, const Duration& duration)
       // on global time, not per-Process time.
     }
   }
+#endif /* _WIN32 */
 }
 
 
 void Clock::update(const Time& time)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   synchronized (timers_mutex) {
     if (clock::paused) {
       if (*clock::current < time) {
@@ -390,11 +442,16 @@ void Clock::update(const Time& time)
       }
     }
   }
+#endif /* _WIN32 */
 }
 
 
 void Clock::update(ProcessBase* process, const Time& time, Update update)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   synchronized (timers_mutex) {
     if (clock::paused) {
       if (now(process) < time || update == Clock::FORCE) {
@@ -408,6 +465,7 @@ void Clock::update(ProcessBase* process, const Time& time, Update update)
       }
     }
   }
+#endif /* _WIN32 */
 }
 
 
@@ -420,6 +478,10 @@ void Clock::order(ProcessBase* from, ProcessBase* to)
 
 bool Clock::settled()
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   synchronized (timers_mutex) {
     CHECK(clock::paused);
 
@@ -437,6 +499,7 @@ bool Clock::settled()
   }
 
   UNREACHABLE();
+#endif /* _WIN32 */
 }
 
 

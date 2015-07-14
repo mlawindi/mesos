@@ -18,10 +18,18 @@
 
 #define UNREACHABLE() Unreachable(__FILE__, __LINE__)
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+inline __declspec(noreturn) void Unreachable(const char *file, int line) {
+  std::cerr << "Reached unreachable statement at " << file << ':'
+    << line << std::endl;
+  abort();
+}
+#else /* MESOS_MSVC || MESOS_MINGW */
 inline __attribute__((noreturn)) void Unreachable(const char *file, int line) {
   std::cerr << "Reached unreachable statement at " << file << ':'
             << line << std::endl;
   abort();
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 #endif // __STOUT_UNREACHABLE_HPP__

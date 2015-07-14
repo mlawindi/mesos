@@ -1,7 +1,10 @@
 #ifndef __PROCESS_SUBPROCESS_HPP__
 #define __PROCESS_SUBPROCESS_HPP__
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
 #include <sys/types.h>
 

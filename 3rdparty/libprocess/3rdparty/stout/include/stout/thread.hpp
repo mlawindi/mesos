@@ -15,7 +15,9 @@
 #define __STOUT_THREAD_HPP__
 
 #include <errno.h>
+#if !defined(_WIN32)
 #include <pthread.h>
+#endif /* _WIN32 */
 #include <stdio.h> // For perror.
 
 #include <stout/abort.hpp>
@@ -25,26 +27,40 @@ struct ThreadLocal
 {
   ThreadLocal()
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     errno = pthread_key_create(&key, NULL);
 
     if (errno != 0) {
       ABORT(std::string("Failed to create thread local, pthread_key_create: ") +
             strerror(errno));
     }
+#endif /* _WIN32 */
   }
 
   ~ThreadLocal()
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     errno = pthread_key_delete(key);
 
     if (errno != 0) {
       ABORT("Failed to destruct thread local, pthread_key_delete: " +
             std::string(strerror(errno)));
     }
+#endif /* _WIN32 */
   }
 
   ThreadLocal<T>& operator = (T* t)
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     errno = pthread_setspecific(key, t);
 
     if (errno != 0) {
@@ -52,16 +68,27 @@ struct ThreadLocal
             strerror(errno));
     }
     return *this;
+#endif /* _WIN32 */
   }
 
   operator T* () const
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     return reinterpret_cast<T*>(pthread_getspecific(key));
+#endif /* _WIN32 */
   }
 
   T* operator -> () const
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     return reinterpret_cast<T*>(pthread_getspecific(key));
+#endif /* _WIN32 */
   }
 
 private:
@@ -72,7 +99,11 @@ private:
   bool operator < (const ThreadLocal<T>&) const;
   bool operator > (const ThreadLocal<T>&) const;
 
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
   pthread_key_t key;
+#endif /* _WIN32 */
 };
 
 #endif // __STOUT_THREAD_HPP__

@@ -331,11 +331,14 @@ private:
     return then<X>(std::function<Future<X>(const T&)>(f));
   }
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
   template <typename F, typename X = typename internal::unwrap<typename std::result_of<F()>::type>::type> // NOLINT(whitespace/line_length)
   Future<X> then(F&& f, LessPrefer) const
   {
     return then<X>(std::function<Future<X>()>(f));
   }
+#endif /* MESOS_MSVC */
 
 public:
   template <typename F>
@@ -804,7 +807,8 @@ Future<T> Future<T>::failed(const std::string& message)
 
 template <typename T>
 Future<T>::Data::Data()
-  : lock(ATOMIC_FLAG_INIT),
+// TODO(aclemmer): This is removed because of something with copy constructors; put back!
+  : /*lock(ATOMIC_FLAG_INIT),*/
     state(PENDING),
     discard(false),
     associated(false),

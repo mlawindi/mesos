@@ -15,7 +15,10 @@
 #ifndef __STOUT_OS_CLOSE_HPP__
 #define __STOUT_OS_CLOSE_HPP__
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
 #include <stout/error.hpp>
 #include <stout/nothing.hpp>
@@ -25,9 +28,14 @@ namespace os {
 
 inline Try<Nothing> close(int fd)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): does not work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (::close(fd) != 0) {
     return ErrnoError();
   }
+#endif /* MESOS_MSVC */
 
   return Nothing();
 }

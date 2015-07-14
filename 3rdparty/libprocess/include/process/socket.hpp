@@ -99,9 +99,14 @@ public:
 
     virtual void shutdown()
     {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
       if (::shutdown(s, SHUT_RD) < 0) {
         PLOG(ERROR) << "Shutdown failed on fd=" << s;
       }
+#endif /* _WIN32 */
     }
 
     // Construct a new Socket from the given impl. This is a proxy

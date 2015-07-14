@@ -28,6 +28,10 @@ namespace os {
 
 inline Try<Nothing> cloexec(int fd)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): fcntl does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   int flags = ::fcntl(fd, F_GETFD);
 
   if (flags == -1) {
@@ -39,11 +43,16 @@ inline Try<Nothing> cloexec(int fd)
   }
 
   return Nothing();
+#endif /* _WIN32 */
 }
 
 
 inline Try<bool> isCloexec(int fd)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): fcntl does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   int flags = ::fcntl(fd, F_GETFD);
 
   if (flags == -1) {
@@ -51,11 +60,16 @@ inline Try<bool> isCloexec(int fd)
   }
 
   return (flags & FD_CLOEXEC) != 0;
+#endif /* _WIN32 */
 }
 
 
 inline Try<Nothing> nonblock(int fd)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): fcntl does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   int flags = ::fcntl(fd, F_GETFL);
 
   if (flags == -1) {
@@ -67,11 +81,16 @@ inline Try<Nothing> nonblock(int fd)
   }
 
   return Nothing();
+#endif /* _WIN32 */
 }
 
 
 inline Try<bool> isNonblock(int fd)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): inet_ntop does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   int flags = ::fcntl(fd, F_GETFL);
 
   if (flags == -1) {
@@ -79,6 +98,7 @@ inline Try<bool> isNonblock(int fd)
   }
 
   return (flags & O_NONBLOCK) != 0;
+#endif /* _WIN32 */
 }
 
 } // namespace os {

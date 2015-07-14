@@ -15,10 +15,16 @@
 #define __STOUT_OS_SIGNALS_HPP__
 
 #include <errno.h>
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <pthread.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #include <signal.h>
 #include <string.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
 namespace os {
 
@@ -27,32 +33,47 @@ namespace signals {
 // Installs the given signal handler.
 inline int install(int signal, void(*handler)(int))
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): sigaction does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
   action.sa_handler = handler;
   return sigaction(signal, &action, NULL);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 // Resets the signal handler to the default handler of the signal.
 inline int reset(int signal)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): sigaction does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
   action.sa_handler = SIG_DFL;
   return sigaction(signal, &action, NULL);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 // Returns true iff the signal is pending.
 inline bool pending(int signal)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): sigaction does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   sigset_t set;
   sigemptyset(&set);
   sigpending(&set);
   return sigismember(&set, signal);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -60,6 +81,10 @@ inline bool pending(int signal)
 // signal was already blocked.
 inline bool block(int signal)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): sigemptyset does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, signal);
@@ -72,6 +97,7 @@ inline bool block(int signal)
   pthread_sigmask(SIG_BLOCK, &set, &oldset);
 
   return !sigismember(&oldset, signal);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -79,6 +105,10 @@ inline bool block(int signal)
 // signal was not previously blocked.
 inline bool unblock(int signal)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): sigemptyset does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, signal);
@@ -89,6 +119,7 @@ inline bool unblock(int signal)
   pthread_sigmask(SIG_UNBLOCK, &set, &oldset);
 
   return sigismember(&oldset, signal);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 namespace internal {
@@ -118,6 +149,10 @@ struct Suppressor
 
   ~Suppressor()
   {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): pthread_self does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
     // We want to preserve errno when the Suppressor drops out of
     // scope. Otherwise, one needs to potentially store errno when
     // using the suppress() macro.
@@ -164,6 +199,7 @@ struct Suppressor
 
     // Restore errno.
     errno = _errno;
+#endif /* MESOS_MSVC || MESOS_MINGW */
   }
 
   // Needed for the suppress() macro.

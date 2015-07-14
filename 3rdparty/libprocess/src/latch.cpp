@@ -26,20 +26,30 @@ Latch::Latch()
 
 Latch::~Latch()
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (__sync_bool_compare_and_swap(&triggered, false, true)) {
     terminate(pid);
   }
+#endif /* MESOS_MSVC */
 }
 
 
 bool Latch::trigger()
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   // TODO(benh): Use std::atomic when C++11 rolls out.
   if (__sync_bool_compare_and_swap(&triggered, false, true)) {
     terminate(pid);
     return true;
   }
   return false;
+#endif /* MESOS_MSVC */
 }
 
 

@@ -1,4 +1,8 @@
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <netinet/tcp.h>
+#endif /* _WIN32 */
 
 #include <process/io.hpp>
 #include <process/network.hpp>
@@ -31,6 +35,10 @@ namespace internal {
 
 Future<Socket> accept(int fd)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   Try<int> accepted = network::accept(fd);
   if (accepted.isError()) {
     return Failure(accepted.error());
@@ -68,6 +76,7 @@ Future<Socket> accept(int fd)
     return Failure("Failed to accept, create socket: " + socket.error());
   }
   return socket.get();
+#endif /* _WIN32 */
 }
 
 } // namespace internal {
@@ -84,6 +93,10 @@ namespace internal {
 
 Future<Nothing> connect(const Socket& socket)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   // Now check that a successful connection was made.
   int opt;
   socklen_t optlen = sizeof(opt);
@@ -96,6 +109,7 @@ Future<Nothing> connect(const Socket& socket)
   }
 
   return Nothing();
+#endif /* _WIN32 */
 }
 
 } // namespace internal {
@@ -103,6 +117,10 @@ Future<Nothing> connect(const Socket& socket)
 
 Future<Nothing> PollSocketImpl::connect(const Address& address)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   Try<int> connect = network::connect(get(), address);
   if (connect.isError()) {
     if (errno == EINPROGRESS) {
@@ -114,6 +132,7 @@ Future<Nothing> PollSocketImpl::connect(const Address& address)
   }
 
   return Nothing();
+#endif /* _WIN32 */
 }
 
 
@@ -127,6 +146,10 @@ namespace internal {
 
 Future<size_t> socket_send_data(int s, const char* data, size_t size)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   CHECK(size > 0);
 
   while (true) {
@@ -158,11 +181,16 @@ Future<size_t> socket_send_data(int s, const char* data, size_t size)
       return length;
     }
   }
+#endif /* _WIN32 */
 }
 
 
 Future<size_t> socket_send_file(int s, int fd, off_t offset, size_t size)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   CHECK(size > 0);
 
   while (true) {
@@ -194,6 +222,7 @@ Future<size_t> socket_send_file(int s, int fd, off_t offset, size_t size)
       return length;
     }
   }
+#endif /* _WIN32 */
 }
 
 } // namespace internal {

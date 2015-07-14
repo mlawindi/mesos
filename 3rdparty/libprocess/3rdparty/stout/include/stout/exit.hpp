@@ -32,11 +32,19 @@ struct __Exit
 {
   __Exit(int _status) : status(_status) {}
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  __declspec(noreturn) ~__Exit()
+  {
+    std::cerr << out.str() << std::endl;
+    exit(status);
+  }
+#else /* MESOS_MSVC || MESOS_MINGW */
   __attribute__((noreturn)) ~__Exit()
   {
     std::cerr << out.str() << std::endl;
     exit(status);
   }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
   std::ostream& stream()
   {

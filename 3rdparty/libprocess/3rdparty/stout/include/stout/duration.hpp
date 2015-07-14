@@ -18,6 +18,10 @@
 #include <limits.h> // For 'LLONG_(MAX|MIN)'.
 #include <time.h> // For 'timeval'.
 
+#if defined(_WIN32)
+#include <winsock2.h> // `timeval` for Windows
+#endif
+
 #include <iomanip>
 #include <iostream>
 #include <string>

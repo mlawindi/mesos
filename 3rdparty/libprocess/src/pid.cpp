@@ -1,10 +1,18 @@
 #include <errno.h>
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <netdb.h>
+#endif /* _WIN32 */
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <arpa/inet.h>
+#endif /* _WIN32 */
 
 #include <glog/logging.h>
 

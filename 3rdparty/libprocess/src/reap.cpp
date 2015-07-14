@@ -1,7 +1,11 @@
 #include <glog/logging.h>
 
 #include <sys/types.h>
+#if defined(_WIN32)
+// TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <sys/wait.h>
+#endif /* _WIN32 */
 
 #include <process/delay.hpp>
 #include <process/future.hpp>

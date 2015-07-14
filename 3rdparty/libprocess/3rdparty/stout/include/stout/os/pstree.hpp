@@ -64,6 +64,10 @@ inline Try<ProcessTree> pstree(
 // pid is none or the current process if pid is 0).
 inline Try<ProcessTree> pstree(Option<pid_t> pid = None())
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (pid.isNone()) {
     pid = 1;
   } else if (pid.get() == 0) {
@@ -77,6 +81,7 @@ inline Try<ProcessTree> pstree(Option<pid_t> pid = None())
   }
 
   return pstree(pid.get(), processes.get());
+#endif /* MESOS_MSVC */
 }
 
 

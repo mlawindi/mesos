@@ -25,6 +25,10 @@ void read(
     const std::shared_ptr<Promise<size_t>>& promise,
     const Future<short>& future)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   // Ignore this function if the read operation has been discarded.
   if (promise->future().hasDiscard()) {
     CHECK(!future.isPending());
@@ -67,6 +71,7 @@ void read(
       promise->set(length);
     }
   }
+#endif /* _WIN32 */
 }
 
 
@@ -77,6 +82,10 @@ void write(
     const std::shared_ptr<Promise<size_t>>& promise,
     const Future<short>& future)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   // Ignore this function if the write operation has been discarded.
   if (promise->future().hasDiscard()) {
     promise->discard();
@@ -159,6 +168,7 @@ void write(
       promise->set(length);
     }
   }
+#endif /* _WIN32 */
 }
 
 } // namespace internal {
@@ -333,6 +343,10 @@ Future<Nothing> splice(int from, int to, size_t chunk)
 
 Future<string> read(int fd)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   process::initialize();
 
   // Get our own copy of the file descriptor so that we're in control
@@ -374,11 +388,16 @@ Future<string> read(int fd)
 
   return internal::_read(fd, buffer, data, BUFFERED_READ_SIZE)
     .onAny(lambda::bind(&os::close, fd));
+#endif /* MESOS_MSVC */
 }
 
 
 Future<Nothing> write(int fd, const std::string& data)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   process::initialize();
 
   // Get our own copy of the file descriptor so that we're in control
@@ -415,11 +434,16 @@ Future<Nothing> write(int fd, const std::string& data)
 
   return internal::_write(fd, Owned<string>(new string(data)), 0)
     .onAny(lambda::bind(&os::close, fd));
+#endif /* MESOS_MSVC */
 }
 
 
 Future<Nothing> redirect(int from, Option<int> to, size_t chunk)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   // Make sure we've got "valid" file descriptors.
   if (from < 0 || (to.isSome() && to.get() < 0)) {
     return Failure(strerror(EBADF));
@@ -485,6 +509,7 @@ Future<Nothing> redirect(int from, Option<int> to, size_t chunk)
   return internal::splice(from, to.get(), chunk)
     .onAny(lambda::bind(&os::close, from))
     .onAny(lambda::bind(&os::close, to.get()));
+#endif /* _WIN32 */
 }
 
 } // namespace io {

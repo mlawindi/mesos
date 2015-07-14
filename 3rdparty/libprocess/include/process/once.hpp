@@ -15,14 +15,24 @@ class Once
 public:
   Once() : started(false), finished(false)
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&cond, NULL);
+#endif /* _WIN32 */
   }
 
   ~Once()
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     pthread_cond_destroy(&cond);
     pthread_mutex_destroy(&mutex);
+#endif /* _WIN32 */
   }
 
   // Returns true if this Once instance has already transitioned to a
@@ -31,6 +41,10 @@ public:
   // called.
   bool once()
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     bool result = false;
 
     synchronized (mutex) {
@@ -45,17 +59,23 @@ public:
     }
 
     return result;
+#endif /* _WIN32 */
   }
 
   // Transitions this Once instance to a 'done' state.
   void done()
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     synchronized (mutex) {
       if (started && !finished) {
         finished = true;
         pthread_cond_broadcast(&cond);
       }
     }
+#endif /* _WIN32 */
   }
 
 private:
@@ -63,8 +83,12 @@ private:
   Once(const Once& that);
   Once& operator = (const Once& that);
 
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
   pthread_mutex_t mutex;
   pthread_cond_t cond;
+#endif /* _WIN32 */
   bool started;
   bool finished;
 };

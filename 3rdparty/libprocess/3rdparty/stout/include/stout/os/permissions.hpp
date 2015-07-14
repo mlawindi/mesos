@@ -22,8 +22,14 @@ namespace os {
 
 struct Permissions
 {
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
   explicit Permissions(mode_t mode)
   {
+#if defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MINGW */
     owner.r = mode & S_IRUSR;
     owner.w = mode & S_IWUSR;
     owner.x = mode & S_IXUSR;
@@ -39,7 +45,9 @@ struct Permissions
     setuid = mode & S_ISUID;
     setgid = mode & S_ISGID;
     sticky = mode & S_ISVTX;
+#endif /* MESOS_MINGW */
   }
+#endif /* MESOS_MSVC */
 
   struct {
     bool r;
@@ -55,11 +63,16 @@ struct Permissions
 
 inline Try<Permissions> permissions(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   struct stat s;
   if (::stat(path.c_str(), &s) < 0) {
     return ErrnoError();
   }
   return Permissions(s.st_mode);
+#endif /* MESOS_MSVC */
 }
 
 } // namespace os {

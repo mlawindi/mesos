@@ -15,7 +15,10 @@
 #define __STOUT_OS_STAT_HPP__
 
 #include <sys/stat.h>
+#if defined(_WIN32)
+#else /* _WIN32 */
 #include <sys/statvfs.h>
+#endif /* _WIN32 */
 
 #include <string>
 
@@ -28,35 +31,46 @@ namespace stat {
 
 inline bool isdir(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
   struct stat s;
 
   if (::stat(path.c_str(), &s) < 0) {
     return false;
   }
   return S_ISDIR(s.st_mode);
+#endif /* MESOS_MSVC */
 }
 
 
 inline bool isfile(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
   struct stat s;
 
   if (::stat(path.c_str(), &s) < 0) {
     return false;
   }
   return S_ISREG(s.st_mode);
+#endif /* MESOS_MSVC */
 }
 
 
 
 inline bool islink(const std::string& path)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): lstat does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   struct stat s;
 
   if (::lstat(path.c_str(), &s) < 0) {
     return false;
   }
   return S_ISLNK(s.st_mode);
+#endif /* _WIN32 */
 }
 
 
@@ -77,6 +91,10 @@ inline Try<Bytes> size(
     const std::string& path,
     const FollowSymlink follow = FOLLOW_SYMLINK)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   struct stat s;
 
   switch (follow) {
@@ -98,11 +116,16 @@ inline Try<Bytes> size(
   }
 
   return Bytes(s.st_size);
+#endif /* _WIN32 */
 }
 
 
 inline Try<long> mtime(const std::string& path)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   struct stat s;
 
   if (::lstat(path.c_str(), &s) < 0) {
@@ -110,9 +133,12 @@ inline Try<long> mtime(const std::string& path)
   }
 
   return s.st_mtime;
+#endif /* _WIN32 */
 }
 
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 inline Try<mode_t> mode(const std::string& path)
 {
   struct stat s;
@@ -123,10 +149,15 @@ inline Try<mode_t> mode(const std::string& path)
 
   return s.st_mode;
 }
+#endif /* MESOS_MSVC */
 
 
 inline Try<dev_t> rdev(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   struct stat s;
 
   if (::stat(path.c_str(), &s) < 0) {
@@ -138,6 +169,7 @@ inline Try<dev_t> rdev(const std::string& path)
   }
 
   return s.st_rdev;
+#endif /* MESOS_MSVC */
 }
 
 

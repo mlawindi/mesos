@@ -25,13 +25,22 @@ namespace os {
 
 inline bool exists(const std::string& path)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): lstat does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   struct stat s;
   if (::lstat(path.c_str(), &s) < 0) {
     return false;
   }
   return true;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
+
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+// TODO(aclemmer): kill does not exist on Windows
+#else /* MESOS_MSVC || MESOS_MINGW */
 
 // Determine if the process identified by pid exists.
 // NOTE: Zombie processes have a pid and therefore exist. See os::process(pid)
@@ -47,6 +56,8 @@ inline bool exists(pid_t pid)
 
   return false;
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
+
 
 } // namespace os {
 

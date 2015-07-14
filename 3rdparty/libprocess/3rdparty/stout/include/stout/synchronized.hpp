@@ -75,6 +75,9 @@ inline Synchronized<std::atomic_flag> synchronize(std::atomic_flag* lock)
 }
 
 
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 // An overload of the 'synchronize' function for 'pthread_mutex_t'.
 inline Synchronized<pthread_mutex_t> synchronize(pthread_mutex_t* mutex)
 {
@@ -88,6 +91,7 @@ inline Synchronized<pthread_mutex_t> synchronize(pthread_mutex_t* mutex)
     }
   );
 }
+#endif /* _WIN32 */
 
 
 template <typename T>

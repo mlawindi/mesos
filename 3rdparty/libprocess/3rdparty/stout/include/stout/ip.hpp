@@ -21,7 +21,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(_WIN32)
+#include <Winsock2.h>
+#else
 #include <arpa/inet.h>
+#endif
 
 #ifdef __APPLE__
 #include <net/if.h>
@@ -29,9 +33,11 @@
 #include <net/if_types.h>
 #endif
 
+#if !defined(_WIN32)
 #include <netinet/in.h>
-
 #include <sys/socket.h>
+#endif
+
 #include <sys/types.h>
 
 #include <iostream>
@@ -83,8 +89,13 @@ public:
   explicit IP(uint32_t _storage)
     : family_(AF_INET)
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
      clear();
      storage_.in_.s_addr = htonl(_storage);
+#endif /* _WIN32 */
   }
 
   // Returns the family type.
@@ -180,9 +191,14 @@ inline Try<IP> IP::parse(const std::string& value, int family)
   Storage storage;
   switch (family) {
     case AF_INET: {
+#if defined(_WIN32)
+      // TODO(aclemmer): inet_pton does not exist on Windows
+      throw 99;
+#else /* _WIN32 */
       if (inet_pton(AF_INET, value.c_str(), &storage.in_) == 0) {
         return Error("Failed to parse the IP");
       }
+#endif /* _WIN32 */
       return IP(storage.in_);
     }
     default: {
@@ -220,6 +236,10 @@ inline std::ostream& operator << (std::ostream& stream, const IP& ip)
 {
   switch (ip.family()) {
     case AF_INET: {
+#if defined(_WIN32)
+      // TODO(aclemmer): inet_ntop does not exist on Windows
+      throw 99;
+#else /* _WIN32 */
       char buffer[INET_ADDRSTRLEN];
       struct in_addr in = ip.in().get();
       if (inet_ntop(AF_INET, &in, buffer, sizeof(buffer)) == NULL) {
@@ -231,6 +251,7 @@ inline std::ostream& operator << (std::ostream& stream, const IP& ip)
       }
 
       stream << buffer;
+#endif /* _WIN32 */
       return stream;
     }
     default: {

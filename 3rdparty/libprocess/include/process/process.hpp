@@ -183,6 +183,10 @@ protected:
   template<typename T>
   size_t eventCount()
   {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
     size_t count = 0U;
 
     synchronized (mutex) {
@@ -190,6 +194,7 @@ protected:
     }
 
     return count;
+#endif /* _WIN32 */
   }
 
 private:
@@ -214,9 +219,13 @@ private:
     return event->is<T>();
   }
 
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
   // Mutex protecting internals.
   // TODO(benh): Consider replacing with a spinlock, on multi-core systems.
   std::recursive_mutex mutex;
+#endif /* _WIN32 */
 
   // Enqueue the specified message, request, or function call.
   void enqueue(Event* event, bool inject = false);

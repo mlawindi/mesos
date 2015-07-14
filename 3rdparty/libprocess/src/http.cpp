@@ -1,4 +1,8 @@
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <arpa/inet.h>
+#endif /* _WIN32 */
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -604,6 +608,10 @@ Future<Response> decode(
     Owned<StreamingResponseDecoder> decoder,
     const string& data)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   deque<Response*> responses = decoder->decode(data.c_str(), data.length());
 
   if (decoder->failed() || responses.size() > 1) {
@@ -629,6 +637,7 @@ Future<Response> decode(
   Response response = *responses[0];
   delete responses[0];
   return response;
+#endif /* MESOS_MSVC */
 }
 
 
@@ -637,6 +646,10 @@ void _decode(
     Owned<StreamingResponseDecoder> decoder,
     const Future<string>& data)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   deque<Response*> responses;
 
   if (!data.isReady()) {
@@ -666,6 +679,7 @@ void _decode(
     socket.recv(None())
       .onAny(lambda::bind(&_decode, socket, decoder, lambda::_1));
   }
+#endif /* MESOS_MSVC */
 }
 
 
@@ -743,6 +757,10 @@ Future<Response> _request(
     const Option<string>& body,
     const Option<string>& contentType)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   std::ostringstream out;
 
   out << method << " /" << strings::remove(url.path, "/", strings::PREFIX);
@@ -821,6 +839,7 @@ Future<Response> _request(
     return pipeResponse
       .then(lambda::bind(&internal::convert, lambda::_1));
   }
+#endif /* MESOS_MSVC */
 }
 
 } // namespace internal {

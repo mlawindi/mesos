@@ -15,7 +15,10 @@
 #define __STOUT_OS_READ_HPP__
 
 #include <stdio.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
 #ifdef __sun
 #include <fstream>
@@ -32,6 +35,10 @@ namespace os {
 // will contain the bytes read and a subsequent read will return None.
 inline Result<std::string> read(int fd, size_t size)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   char* buffer = new char[size];
   size_t offset = 0;
 
@@ -64,6 +71,7 @@ inline Result<std::string> read(int fd, size_t size)
   std::string result(buffer, size);
   delete[] buffer;
   return result;
+#endif /* MESOS_MSVC */
 }
 
 
@@ -82,6 +90,11 @@ inline Try<std::string> read(const std::string& path)
 #else
 inline Try<std::string> read(const std::string& path)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): getline does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
+
   FILE* file = fopen(path.c_str(), "r");
   if (file == NULL) {
     return ErrnoError("Failed to open file '" + path + "'");
@@ -118,6 +131,8 @@ inline Try<std::string> read(const std::string& path)
 
   fclose(file);
   return result;
+
+#endif /* _WIN32 */
 }
 #endif // __sun
 

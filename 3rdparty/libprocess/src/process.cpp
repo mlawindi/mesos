@@ -1,20 +1,33 @@
 #include <errno.h>
 #include <limits.h>
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): fix this
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <libgen.h>
 #include <netdb.h>
 #include <pthread.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): fix this
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <arpa/inet.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 #include <glog/logging.h>
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
@@ -25,6 +38,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#endif /* MESOS_MSVC */
 
 #include <algorithm>
 #include <deque>
@@ -696,6 +710,10 @@ void install(std::vector<Owned<FirewallRule>>&& rules)
 
 void initialize(const string& delegate)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   // TODO(benh): Return an error if attempting to initialize again
   // with a different delegate then originally specified.
 
@@ -925,6 +943,7 @@ void initialize(const string& delegate)
 
   VLOG(1) << "libprocess is initialized on " << address() << " for " << cpus
           << " cpus";
+#endif /* MESOS_MSVC */
 }
 
 
@@ -1032,6 +1051,10 @@ void HttpProxy::waited(const Future<Response>& future)
 
 bool HttpProxy::process(const Future<Response>& future, const Request& request)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (!future.isReady()) {
     // TODO(benh): Consider handling other "states" of future
     // (discarded, failed, etc) with different HTTP statuses.
@@ -1122,6 +1145,7 @@ bool HttpProxy::process(const Future<Response>& future, const Request& request)
   }
 
   return true; // All done, can process next response.
+#endif /* MESOS_MSVC */
 }
 
 
@@ -1873,8 +1897,13 @@ void SocketManager::exited(ProcessBase* process)
 ProcessManager::ProcessManager(const string& _delegate)
   : delegate(_delegate)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   running = 0;
   __sync_synchronize(); // Ensure write to 'running' visible in other threads.
+#endif /* MESOS_MSVC */
 }
 
 
@@ -2142,6 +2171,10 @@ UPID ProcessManager::spawn(ProcessBase* process, bool manage)
 
 void ProcessManager::resume(ProcessBase* process)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   __process__ = process;
 
   VLOG(2) << "Resuming " << process->pid << " at " << Clock::now();
@@ -2244,11 +2277,16 @@ void ProcessManager::resume(ProcessBase* process)
 
   CHECK_GE(running, 1);
   __sync_fetch_and_sub(&running, 1);
+#endif /* MESOS_MSVC */
 }
 
 
 void ProcessManager::cleanup(ProcessBase* process)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   VLOG(2) << "Cleaning up " << process->pid;
 
   // First, set the terminating state so no more events will get
@@ -2343,6 +2381,7 @@ void ProcessManager::cleanup(ProcessBase* process)
       gate->open();
     }
   }
+#endif /* MESOS_MSVC */
 }
 
 
@@ -2387,6 +2426,10 @@ void ProcessManager::terminate(
 
 bool ProcessManager::wait(const UPID& pid)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   // We use a gate for waiters. A gate is single use. That is, a new
   // gate is created when the first thread shows up and wants to wait
   // for a process that currently has no gate. Once that process
@@ -2464,6 +2507,7 @@ bool ProcessManager::wait(const UPID& pid)
   }
 
   return false;
+#endif /* MESOS_MSVC */
 }
 
 
@@ -2496,6 +2540,10 @@ void ProcessManager::enqueue(ProcessBase* process)
 
 ProcessBase* ProcessManager::dequeue()
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   // TODO(benh): Remove a process from this thread's runq. If there
   // are no processes to run, and this is not a dedicated thread, then
   // steal one from another threads runq.
@@ -2514,11 +2562,16 @@ ProcessBase* ProcessManager::dequeue()
   }
 
   return process;
+#endif /* MESOS_MSVC */
 }
 
 
 void ProcessManager::settle()
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   bool done = true;
   do {
     // While refactoring in order to isolate libev behind abstractions
@@ -2557,11 +2610,16 @@ void ProcessManager::settle()
       }
     }
   } while (!done);
+#endif /* MESOS_MSVC */
 }
 
 
 Future<Response> ProcessManager::__processes__(const Request&)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   JSON::Array array;
 
   synchronized (processes_mutex) {
@@ -2639,11 +2697,16 @@ Future<Response> ProcessManager::__processes__(const Request&)
   }
 
   return OK(array);
+#endif /* MESOS_MSVC */
 }
 
 
 ProcessBase::ProcessBase(const string& id)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   process::initialize();
 
   state = ProcessBase::BOTTOM;
@@ -2659,6 +2722,7 @@ ProcessBase::ProcessBase(const string& id)
   if (Clock::paused()) {
     Clock::update(this, Clock::now(__process__), Clock::FORCE);
   }
+#endif /* MESOS_MSVC */
 }
 
 

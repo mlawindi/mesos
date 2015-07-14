@@ -35,6 +35,10 @@ inline Try<int> socket(int family, int type, int protocol)
 // TODO(benh): Remove and defer to Socket::accept.
 inline Try<int> accept(int s)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   struct sockaddr_storage storage;
   socklen_t storagelen = sizeof(storage);
 
@@ -44,6 +48,7 @@ inline Try<int> accept(int s)
   }
 
   return accepted;
+#endif /* _WIN32 */
 }
 
 
@@ -82,6 +87,10 @@ inline Try<int> connect(int s, const Address& address)
 // type is not supported.
 inline Try<Address> address(int s)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   struct sockaddr_storage storage;
   socklen_t storagelen = sizeof(storage);
 
@@ -90,6 +99,7 @@ inline Try<Address> address(int s)
   }
 
   return Address::create(storage);
+#endif /* _WIN32 */
 }
 
 } // namespace network {

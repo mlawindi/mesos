@@ -50,9 +50,15 @@ namespace os {
 #endif
 #endif
 
-
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 inline Try<int> open(const std::string& path, int oflag, mode_t mode = 0)
 {
+#if defined(MESOS_MINGW)
+  // TODO(aclemmer): O_CLOEXEC (among other things) does not exist on Windows
+  throw 99;
+#else /* MESOS_MINGW */
+
 #ifdef O_CLOEXEC_UNDEFINED
   // Before we passing oflag to ::open, we need to strip the O_CLOEXEC
   // flag since it's not supported.
@@ -80,7 +86,10 @@ inline Try<int> open(const std::string& path, int oflag, mode_t mode = 0)
 #endif
 
   return fd;
+
+#endif /* MESOS_MINGW */
 }
+#endif /* MESOS_MSVC */
 
 } // namespace os {
 

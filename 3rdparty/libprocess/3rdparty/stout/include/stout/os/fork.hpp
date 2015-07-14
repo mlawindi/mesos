@@ -15,11 +15,20 @@
 #define __STOUT_OS_FORK_HPP__
 
 #include <fcntl.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <sys/mman.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #include <sys/types.h>
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <sys/wait.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 #include <list>
 #include <memory>
@@ -259,6 +268,10 @@ private:
 
     void operator () (Tree::Memory* process) const
     {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
       if (munmap(process, sizeof(Tree::Memory)) == -1) {
         ABORT(std::string("Failed to unmap memory: ") + strerror(errno));
       }
@@ -266,6 +279,7 @@ private:
         ABORT(std::string("Failed to close shared memory file descriptor: ") +
               strerror(errno));
       }
+#endif /* MESOS_MSVC || MESOS_MINGW */
     }
 
     const int fd;
@@ -274,6 +288,10 @@ private:
   // Constructs a Tree (see above) from this fork template.
   Try<Tree> prepare() const
   {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): shm_open (among other things) does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
     static int forks = 0;
 
     // Each "instance" of an instantiated Fork needs a unique name for
@@ -323,12 +341,17 @@ private:
     }
 
     return tree;
+#endif /* MESOS_MSVC || MESOS_MINGW */
   }
 
   // Performs the fork, executes the function, recursively
   // instantiates any children, and then executes/waits/exits.
   pid_t instantiate(const Tree& tree) const
   {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): fork (among others) does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
     pid_t pid = ::fork();
     if (pid > 0) {
       return pid;
@@ -372,6 +395,7 @@ private:
 
     exit(0);
     return -1;
+#endif /* MESOS_MSVC || MESOS_MINGW */
   }
 
   // Waits for all of the descendant processes in the tree to update
@@ -379,6 +403,10 @@ private:
   // information from shared memory.
   static Try<ProcessTree> coordinate(const Tree& tree)
   {
+#if defined(MESOS_MSVC)
+    // TODO(aclemmer): this doesn't work on MSVC
+    throw 99;
+#elif /* MESOS_MSVC */
     // Wait for the forked process.
     // TODO(benh): Don't wait forever?
     while (!tree.memory->set) {
@@ -413,6 +441,7 @@ private:
     }
 
     return ProcessTree(process, children);
+#endif /* MESOS_MSVC */
   }
 
 public:

@@ -14,7 +14,11 @@
 #ifndef __STOUT_GZIP_HPP__
 #define __STOUT_GZIP_HPP__
 
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <zlib.h>
+#endif /* _WIN32 */
 
 #include <string>
 
@@ -29,6 +33,14 @@ namespace gzip {
 // We use a 16KB buffer with zlib compression / decompression.
 #define GZIP_BUFFER_SIZE 16384
 
+#if defined(_WIN32)
+  // TODO(aclemmer): these are defined by zlib, should be deleted
+#define Z_DEFAULT_COMPRESSION  (-1)
+#define Z_NO_COMPRESSION         0
+#define Z_BEST_SPEED             1
+#define Z_BEST_COMPRESSION       9
+#endif /* _WIN32 */
+
 // Returns a gzip compressed version of the provided string.
 // The compression level should be within the range [-1, 9].
 // See zlib.h:
@@ -40,6 +52,10 @@ inline Try<std::string> compress(
     const std::string& decompressed,
     int level = Z_DEFAULT_COMPRESSION)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   // Verify the level is within range.
   if (!(level == Z_DEFAULT_COMPRESSION ||
       (level >= Z_NO_COMPRESSION && level <= Z_BEST_COMPRESSION))) {
@@ -93,12 +109,17 @@ inline Try<std::string> compress(
     return Error("Failed to clean up zlib: " + std::string(stream.msg));
   }
   return result;
+#endif /* _WIN32 */
 }
 
 
 // Returns a gzip decompressed version of the provided string.
 inline Try<std::string> decompress(const std::string& compressed)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   z_stream_s stream;
   stream.next_in =
     const_cast<Bytef*>(reinterpret_cast<const Bytef*>(compressed.data()));
@@ -142,6 +163,7 @@ inline Try<std::string> decompress(const std::string& compressed)
     return Error("Failed to clean up zlib: " + std::string(stream.msg));
   }
   return result;
+#endif /* _WIN32 */
 }
 
 } // namespace gzip {

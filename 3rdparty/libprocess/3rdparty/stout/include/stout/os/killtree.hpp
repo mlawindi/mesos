@@ -14,9 +14,15 @@
 #ifndef __STOUT_OS_KILLTREE_HPP__
 #define __STOUT_OS_KILLTREE_HPP__
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <dirent.h>
+#endif /* MESOS_MSVC */
 #include <stdlib.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
 #include <list>
 #include <ostream>
@@ -61,6 +67,10 @@ inline Try<std::list<ProcessTree> > killtree(
     bool groups = false,
     bool sessions = false)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): kill (among many others) does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   Try<std::list<Process> > processes = os::processes();
 
   if (processes.isError()) {
@@ -219,6 +229,7 @@ inline Try<std::list<ProcessTree> > killtree(
 
   // Return the process trees representing the visited pids.
   return pstrees(visited.pids, visited.processes);
+#endif /* _WIN32 */
 }
 
 } // namespace os {

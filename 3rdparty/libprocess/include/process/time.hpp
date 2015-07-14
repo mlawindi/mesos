@@ -90,11 +90,28 @@ inline std::ostream& operator << (std::ostream& stream, const Time& time)
 
   // The RFC 3339 Format.
   tm tm_;
+  // TODO(aclemmer): figure out if the gmtime here is coming from MINGW (bad)
+  // or from MSVC (good, threadsafe).
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): does not work on MSVC
+  throw 99;
+#elif defined(MESOS_MINGW)
+  // TODO(aclemmer): depends on MinGW
+  throw 99;
+  tm * ptm = std::gmtime(&secs);
+  if (ptm == NULL) {
+    PLOG(ERROR)
+      << "Failed to convert the 'time' to a tm struct using gmtime()";
+    return stream;
+  }
+  tm_ = *ptm;
+#else /* MESOS_MSVC */
   if (gmtime_r(&secs, &tm_) == NULL) {
     PLOG(ERROR)
       << "Failed to convert the 'time' to a tm struct using gmtime_r()";
     return stream;
   }
+#endif /* MESOS_MSVC */
 
   strftime(date, 64, "%Y-%m-%d %H:%M:%S", &tm_);
   stream << date;

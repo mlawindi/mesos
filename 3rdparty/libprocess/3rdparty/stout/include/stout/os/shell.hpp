@@ -31,6 +31,10 @@ namespace os {
 // TODO(vinod): Pass an istream object that can provide input to the command.
 inline Try<int> shell(std::ostream* os, const std::string fmt, ...)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   va_list args;
   va_start(args, fmt);
 
@@ -68,6 +72,7 @@ inline Try<int> shell(std::ostream* os, const std::string fmt, ...)
   }
 
   return status;
+#endif /* _WIN32 */
 }
 
 } // namespace os {

@@ -62,7 +62,8 @@ private:
   struct Data {
     Data(const std::string& _name, const Option<Duration>& window)
       : name(_name),
-        lock(ATOMIC_FLAG_INIT),
+      // TODO(aclemmer): taken out because of copy constructor madness! Fix this!
+        /*lock(ATOMIC_FLAG_INIT),*/
         history(None())
     {
       if (window.isSome()) {

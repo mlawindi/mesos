@@ -14,9 +14,15 @@
 #ifndef __STOUT_OS_LS_HPP__
 #define __STOUT_OS_LS_HPP__
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <dirent.h>
+#endif /* MESOS_MSVC */
 #include <stdlib.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
+#endif /* MESOS_MSVC */
 
 #include <list>
 #include <string>
@@ -25,6 +31,10 @@ namespace os {
 
 inline Try<std::list<std::string> > ls(const std::string& directory)
 {
+#if defined(_WIN32)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* _WIN32 */
   DIR* dir = opendir(directory.c_str());
 
   if (dir == NULL) {
@@ -73,6 +83,7 @@ inline Try<std::list<std::string> > ls(const std::string& directory)
   }
 
   return result;
+#endif /* _WIN32 */
 }
 
 } // namespace os {

@@ -63,10 +63,15 @@ namespace internal {
 inline Try<std::string> format(const std::string& fmt, va_list args)
 {
   char* temp;
+#if defined(_WIN32)
+  // TODO(aclemmer): vasprintf doesn't exist in Windows. Fix this.
+  throw 99;
+#else /* _WIN32 */
   if (vasprintf(&temp, fmt.c_str(), args) == -1) {
     // Note that temp is undefined, so we do not need to call free.
     return Error("Failed to format '" + fmt + "' (possibly out of memory)");
   }
+#endif /* _WIN32 */
   std::string result(temp);
   free(temp);
   return result;

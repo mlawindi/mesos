@@ -29,6 +29,12 @@
 
 namespace os {
 
+#if defined(MESOS_MSVC)
+// TODO(aclemmer): DO NOT DO THIS, ERASE!!
+typedef int pid_t;
+#else /* MESOS_MSVC */
+#endif /* MESOS_MSVC */
+
 struct Process
 {
   Process(pid_t _pid,

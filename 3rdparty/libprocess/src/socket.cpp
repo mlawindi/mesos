@@ -1,4 +1,8 @@
+#if defined(_WIN32)
+// TODO(aclemmer): timespec does not exist on Windows
+#else /* _WIN32 */
 #include <unistd.h> // For sysconf.
+#endif /* _WIN32 */
 
 #include <memory>
 #include <string>

@@ -17,7 +17,10 @@
 #ifdef __APPLE__
 #include <crt_externs.h> // For _NSGetEnviron().
 #endif
+#if defined(MESOS_MSVC)
+#elif defined(MESOS_MINGW)
 #include <dirent.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #include <errno.h>
 #ifdef __sun
 #include <sys/loadavg.h>
@@ -26,20 +29,36 @@
 #define NAME_MAX MAXNAMLEN
 #endif // NAME_MAX
 #else
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <fts.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #endif // __sun
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <glob.h>
 #include <grp.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
+
+#if defined(MESOS_MSVC)
+#else
 #include <libgen.h>
+#endif /* MESOS_MSVC */
 #include <limits.h>
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <netdb.h>
 #include <pwd.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <unistd.h>
 #include <utime.h>
+#endif /* MESOS_MSVC */
 
 #include <glog/logging.h>
 
@@ -51,8 +70,11 @@
 #include <sys/sysinfo.h>
 #endif // __linux__
 #include <sys/types.h>
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <sys/utsname.h>
 #include <sys/wait.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 #include <list>
 #include <set>
@@ -128,7 +150,12 @@ inline char** environ()
 #ifdef __APPLE__
   return *_NSGetEnviron();
 #else
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   return ::environ;
+#endif /* MESOS_MSVC */
 #endif
 }
 
@@ -144,13 +171,22 @@ inline char*** environp()
 #ifdef __APPLE__
   return _NSGetEnviron();
 #else
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   return &::environ;
+#endif /* MESOS_MSVC */
 #endif
 }
 
 
 inline hashmap<std::string, std::string> environment()
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   char** environ = os::environ();
 
   hashmap<std::string, std::string> result;
@@ -165,6 +201,7 @@ inline hashmap<std::string, std::string> environment()
   }
 
   return result;
+#endif /* MESOS_MSVC */
 }
 
 
@@ -189,7 +226,12 @@ inline void setenv(const std::string& key,
                    const std::string& value,
                    bool overwrite = true)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   ::setenv(key.c_str(), value.c_str(), overwrite ? 1 : 0);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -197,12 +239,21 @@ inline void setenv(const std::string& key,
 // environment variables.
 inline void unsetenv(const std::string& key)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   ::unsetenv(key.c_str());
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 inline Try<bool> access(const std::string& path, int how)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (::access(path.c_str(), how) < 0) {
     if (errno == EACCES) {
       return false;
@@ -211,22 +262,32 @@ inline Try<bool> access(const std::string& path, int how)
     }
   }
   return true;
+#endif /* MESOS_MSVC */
 }
 
 
 // Sets the access and modification times of 'path' to the current time.
 inline Try<Nothing> utime(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (::utime(path.c_str(), NULL) == -1) {
     return ErrnoError();
   }
 
   return Nothing();
+#endif /* MESOS_MSVC */
 }
 
 
 inline Try<Nothing> touch(const std::string& path)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   if (!exists(path)) {
     Try<int> fd = open(
         path,
@@ -242,6 +303,7 @@ inline Try<Nothing> touch(const std::string& path)
 
   // Update the access and modification times.
   return utime(path);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -251,6 +313,10 @@ inline Try<Nothing> touch(const std::string& path)
 // alphanumeric combination.
 inline Try<std::string> mktemp(const std::string& path = "/tmp/XXXXXX")
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   char* temp = new char[path.size() + 1];
   int fd = ::mkstemp(::strcpy(temp, path.c_str()));
 
@@ -267,12 +333,17 @@ inline Try<std::string> mktemp(const std::string& path = "/tmp/XXXXXX")
   std::string result(temp);
   delete[] temp;
   return result;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 // Write out the string to the file at the current fd position.
 inline Try<Nothing> write(int fd, const std::string& message)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   size_t offset = 0;
 
   while (offset < message.length()) {
@@ -291,6 +362,7 @@ inline Try<Nothing> write(int fd, const std::string& message)
   }
 
   return Nothing();
+#endif /* MESOS_MSVC */
 }
 
 
@@ -298,6 +370,10 @@ inline Try<Nothing> write(int fd, const std::string& message)
 // open and closing the file.
 inline Try<Nothing> write(const std::string& path, const std::string& message)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   Try<int> fd = os::open(
       path,
       O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,
@@ -315,21 +391,31 @@ inline Try<Nothing> write(const std::string& path, const std::string& message)
   os::close(fd.get());
 
   return result;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 inline Try<Nothing> rm(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (::remove(path.c_str()) != 0) {
     return ErrnoError();
   }
 
   return Nothing();
+#endif /* MESOS_MSVC */
 }
 
 
 inline Try<std::string> basename(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   char* temp = new char[path.size() + 1];
   char* result = ::basename(::strcpy(temp, path.c_str()));
   if (result == NULL) {
@@ -340,11 +426,16 @@ inline Try<std::string> basename(const std::string& path)
   std::string s(result);
   delete[] temp;
   return s;
+#endif /* MESOS_MSVC */
 }
 
 
 inline Try<std::string> dirname(const std::string& path)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   char* temp = new char[path.size() + 1];
   char* result = ::dirname(::strcpy(temp, path.c_str()));
   if (result == NULL) {
@@ -355,11 +446,16 @@ inline Try<std::string> dirname(const std::string& path)
   std::string s(result);
   delete[] temp;
   return s;
+#endif /* MESOS_MSVC */
 }
 
 
 inline Result<std::string> realpath(const std::string& path)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   char temp[PATH_MAX];
   if (::realpath(path.c_str(), temp) == NULL) {
     if (errno == ENOENT || errno == ENOTDIR) {
@@ -368,11 +464,16 @@ inline Result<std::string> realpath(const std::string& path)
     return ErrnoError();
   }
   return std::string(temp);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 inline Try<Nothing> mkdir(const std::string& directory, bool recursive = true)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   if (!recursive) {
     if (::mkdir(directory.c_str(), 0755) < 0) {
       return ErrnoError();
@@ -396,6 +497,7 @@ inline Try<Nothing> mkdir(const std::string& directory, bool recursive = true)
   }
 
   return Nothing();
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 // Creates a temporary directory using the specified path
@@ -404,6 +506,10 @@ inline Try<Nothing> mkdir(const std::string& directory, bool recursive = true)
 // with a unique alphanumeric combination.
 inline Try<std::string> mkdtemp(const std::string& path = "/tmp/XXXXXX")
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   char* temp = new char[path.size() + 1];
   if (::mkdtemp(::strcpy(temp, path.c_str())) != NULL) {
     std::string result(temp);
@@ -413,6 +519,7 @@ inline Try<std::string> mkdtemp(const std::string& path = "/tmp/XXXXXX")
     delete[] temp;
     return ErrnoError();
   }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 // By default, recursively deletes a directory akin to: 'rm -r'. If the
@@ -421,6 +528,10 @@ inline Try<std::string> mkdtemp(const std::string& path = "/tmp/XXXXXX")
 #ifndef __sun // FTS is not available on Solaris.
 inline Try<Nothing> rmdir(const std::string& directory, bool recursive = true)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   if (!recursive) {
     if (::rmdir(directory.c_str()) < 0) {
       return ErrnoError();
@@ -462,6 +573,7 @@ inline Try<Nothing> rmdir(const std::string& directory, bool recursive = true)
   }
 
   return Nothing();
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 #endif // __sun
 
@@ -473,6 +585,10 @@ inline Try<Nothing> rmdir(const std::string& directory, bool recursive = true)
 // because Try involves 'new', which is not async signal safe.
 inline int system(const std::string& command)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   pid_t pid = ::fork();
 
   if (pid == -1) {
@@ -492,6 +608,7 @@ inline int system(const std::string& command)
 
     return status;
   }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -504,6 +621,10 @@ inline int system(const std::string& command)
 // async signal safe.
 inline int execvpe(const char* file, char** argv, char** envp)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   char** saved = os::environ();
 
   *os::environp() = envp;
@@ -513,9 +634,12 @@ inline int execvpe(const char* file, char** argv, char** envp)
   *os::environp() = saved;
 
   return result;
+#endif /* MESOS_MSVC */
 }
 
-
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): uid_t does not exist on Windows
+#else /* MESOS_MSVC || MESOS_MINGW */
 inline Try<Nothing> chown(
     uid_t uid,
     gid_t gid,
@@ -542,6 +666,7 @@ inline Try<Nothing> chown(
 
   return Nothing();
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 
 // Changes the specified path's user and group ownership to that of
@@ -551,58 +676,88 @@ inline Try<Nothing> chown(
     const std::string& path,
     bool recursive = true)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   passwd* passwd;
   if ((passwd = ::getpwnam(user.c_str())) == NULL) {
     return ErrnoError("Failed to get user information for '" + user + "'");
   }
 
   return chown(passwd->pw_uid, passwd->pw_gid, path, recursive);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 inline Try<Nothing> chmod(const std::string& path, int mode)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (::chmod(path.c_str(), mode) < 0) {
     return ErrnoError();
   }
 
   return Nothing();
+#endif /* MESOS_MSVC */
 }
 
 
 inline Try<Nothing> chdir(const std::string& directory)
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   if (::chdir(directory.c_str()) < 0) {
     return ErrnoError();
   }
 
   return Nothing();
+#endif /* MESOS_MSVC */
 }
 
 
 inline Try<Nothing> chroot(const std::string& directory)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   if (::chroot(directory.c_str()) < 0) {
     return ErrnoError();
   }
 
   return Nothing();
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 inline Try<Nothing> mknod(
     const std::string& path,
     mode_t mode,
     dev_t dev)
 {
+#if defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MINGW */
   if (::mknod(path.c_str(), mode, dev) < 0) {
     return ErrnoError();
   }
 
   return Nothing();
+#endif /* MESOS_MINGW */
 }
+#endif /* MESOS_MSVC */
 
-
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+#else /* MESOS_MSVC || MESOS_MINGW */
 inline Result<uid_t> getuid(const Option<std::string>& user = None())
 {
   if (user.isNone()) {
@@ -657,8 +812,12 @@ inline Result<uid_t> getuid(const Option<std::string>& user = None())
 
   UNREACHABLE();
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+#else /* MESOS_MSVC || MESOS_MINGW */
 inline Result<gid_t> getgid(const Option<std::string>& user = None())
 {
   if (user.isNone()) {
@@ -713,10 +872,15 @@ inline Result<gid_t> getgid(const Option<std::string>& user = None())
 
   UNREACHABLE();
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 
 inline Try<Nothing> su(const std::string& user)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   Result<gid_t> gid = os::getgid(user);
   if (gid.isError() || gid.isNone()) {
     return Error("Failed to getgid: " +
@@ -741,11 +905,16 @@ inline Try<Nothing> su(const std::string& user)
   }
 
   return Nothing();
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 inline std::string getcwd()
 {
+#if defined(MESOS_MSVC)
+  // TODO(aclemmer): doesn't work on MSVC
+  throw 99;
+#else /* MESOS_MSVC */
   size_t size = 100;
 
   while (true) {
@@ -765,6 +934,7 @@ inline std::string getcwd()
   }
 
   return std::string();
+#endif /* MESOS_MSVC */
 }
 
 
@@ -810,6 +980,9 @@ inline Try<std::list<std::string> > find(
 }
 
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): munmap does not exist on Windows
+#else /* MESOS_MSVC || MESOS_MINGW */
 inline Result<std::string> user(Option<uid_t> uid = None())
 {
   if (uid.isNone()) {
@@ -851,11 +1024,16 @@ inline Result<std::string> user(Option<uid_t> uid = None())
     }
   }
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 
 // Suspends execution for the given duration.
 inline Try<Nothing> sleep(const Duration& duration)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   timespec remaining;
   remaining.tv_sec = static_cast<long>(duration.secs());
   remaining.tv_nsec =
@@ -870,6 +1048,7 @@ inline Try<Nothing> sleep(const Duration& duration)
   }
 
   return Nothing();
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -893,6 +1072,10 @@ inline Try<Nothing> tar(const std::string& path, const std::string& archive)
 // Returns the list of files that match the given (shell) pattern.
 inline Try<std::list<std::string> > glob(const std::string& pattern)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): glob_t does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   glob_t g;
   int status = ::glob(pattern.c_str(), GLOB_NOSORT, NULL, &g);
 
@@ -913,18 +1096,24 @@ inline Try<std::list<std::string> > glob(const std::string& pattern)
   globfree(&g); // Best-effort free of dynamically allocated memory.
 
   return result;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 // Returns the total number of cpus (cores).
 inline Try<long> cpus()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): _SC_NPROCESSORS_ONLN does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   long cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
   if (cpus < 0) {
     return ErrnoError();
   }
   return cpus;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -943,6 +1132,10 @@ struct Load {
 // uptime(1).
 inline Try<Load> loadavg()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): getloadavg does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   double loadArray[3];
   if (getloadavg(loadArray, 3) == -1) {
     return ErrnoError("Failed to determine system load averages");
@@ -954,6 +1147,7 @@ inline Try<Load> loadavg()
   load.fifteen = loadArray[2];
 
   return load;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -969,6 +1163,10 @@ struct Memory
 // Returns the total size of main and free memory.
 inline Try<Memory> memory()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): uname does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   Memory memory;
 
 #ifdef __linux__
@@ -1020,6 +1218,7 @@ inline Try<Memory> memory()
 #else
   return Error("Cannot determine the size of total and free memory");
 #endif
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -1059,6 +1258,10 @@ struct UTSInfo
 // Return the system information.
 inline Try<UTSInfo> uname()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): utsname does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   struct utsname name;
 
   if (::uname(&name) < 0) {
@@ -1072,6 +1275,7 @@ inline Try<UTSInfo> uname()
   info.version = name.version;
   info.machine = name.machine;
   return info;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -1113,6 +1317,10 @@ inline Try<Version> release()
 
 inline Try<std::list<Process> > processes()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): pids does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   const Try<std::set<pid_t>> pids = os::pids();
 
   if (pids.isError()) {
@@ -1129,6 +1337,7 @@ inline Try<std::list<Process> > processes()
     }
   }
   return result;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -1191,6 +1400,10 @@ inline Try<std::set<pid_t> > children(pid_t pid, bool recursive = true)
 // of the calling process.
 inline Try<std::set<pid_t> > pids(Option<pid_t> group, Option<pid_t> session)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): pids does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   if (group.isNone() && session.isNone()) {
     return os::pids();
   } else if (group.isSome() && group.get() < 0) {
@@ -1231,6 +1444,7 @@ inline Try<std::set<pid_t> > pids(Option<pid_t> group, Option<pid_t> session)
   }
 
   return result;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -1275,7 +1489,12 @@ inline void setPaths(const std::string& newPaths)
 #else
     "DYLD_LIBRARY_PATH";
 #endif
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): setenv does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   setenv(environmentVariable, newPaths);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 

@@ -18,7 +18,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif /* _WIN32 */
 
 // Signal safe abort which prints a message.
 #define __STRINGIZE(x) #x
@@ -27,6 +30,16 @@
 
 #define ABORT(...) _Abort(_ABORT_PREFIX, __VA_ARGS__)
 
+#if defined(MESOS_MSVC)
+inline __declspec(noreturn) void _Abort(
+    const char *prefix,
+    const char *msg)
+{
+  // TODO(aclemmer): method stubbed out
+  throw 99;
+}
+#elif defined(MESOS_MINGW)
+#else /* MESOS_MSVC */
 inline __attribute__((noreturn)) void _Abort(
     const char *prefix,
     const char *msg)
@@ -37,17 +50,28 @@ inline __attribute__((noreturn)) void _Abort(
   // implemented in an unsafe manner:
   // http://austingroupbugs.net/view.php?id=692
   while (write(STDERR_FILENO, prefix, strlen(prefix)) == -1 &&
-         errno == EINTR);
+    errno == EINTR);
   while (msg != NULL &&
-         write(STDERR_FILENO, msg, strlen(msg)) == -1 &&
-         errno == EINTR);
+    write(STDERR_FILENO, msg, strlen(msg)) == -1 &&
+    errno == EINTR);
   abort();
 }
+#endif /* MESOS_MSVC  */
 
+#if defined(MESOS_MSVC)
+inline __declspec(noreturn) void _Abort(
+  const char *prefix,
+  const std::string &msg) {
+  // TODO(aclemmer): method stubbed out
+  throw 99;
+}
+#elif defined(MESOS_MINGW)
+#else /* _WIN32 */
 inline __attribute__((noreturn)) void _Abort(
   const char *prefix,
   const std::string &msg) {
   _Abort(prefix, msg.c_str());
 }
+#endif /* _WIN32 */
 
 #endif // __STOUT_ABORT_HPP__

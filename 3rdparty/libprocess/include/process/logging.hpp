@@ -37,11 +37,16 @@ private:
 
   void set(int v)
   {
+#if defined(MESOS_MSVC)
+    // TODO(aclemmer): doesn't work on MSVC
+    throw 99;
+#else /* MESOS_MSVC */
     if (FLAGS_v != v) {
       VLOG(FLAGS_v) << "Setting verbose logging level to " << v;
       FLAGS_v = v;
       __sync_synchronize(); // Ensure 'FLAGS_v' visible in other threads.
     }
+#endif /* MESOS_MSVC */
   }
 
   void revert()

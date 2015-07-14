@@ -2,9 +2,11 @@
 #define __PROCESS_ADDRESS_HPP__
 
 #include <stdint.h>
-#include <unistd.h>
 
+#if !defined(_WIN32)
+#include <unistd.h>
 #include <arpa/inet.h>
+#endif
 
 #include <glog/logging.h>
 

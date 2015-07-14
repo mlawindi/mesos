@@ -226,13 +226,15 @@ private:
   struct Data
   {
     Data()
-      : lock(ATOMIC_FLAG_INIT),
+      // TODO(aclemmer): removed because of lock copy constructor; fix!
+      : /*lock(ATOMIC_FLAG_INIT),*/
         readEnd(Reader::OPEN),
         writeEnd(Writer::OPEN) {}
 
     // Rather than use a process to serialize access to the pipe's
     // internal data we use a 'std::atomic_flag'.
     std::atomic_flag lock;
+
 
     Reader::State readEnd;
     Writer::State writeEnd;

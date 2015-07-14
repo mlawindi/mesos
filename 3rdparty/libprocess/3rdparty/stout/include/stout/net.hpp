@@ -14,12 +14,18 @@
 #ifndef __STOUT_NET_HPP__
 #define __STOUT_NET_HPP__
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <netdb.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <arpa/inet.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 #ifdef __APPLE__
 #include <net/if.h>
@@ -27,9 +33,15 @@
 #include <net/if_types.h>
 #endif
 
+#if defined(MESOS_MSVC)
+#else /* MESOS_MSVC */
 #include <sys/param.h>
+#endif /* MESOS_MSVC */
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+#else /* MESOS_MSVC || MESOS_MINGW */
 #include <curl/curl.h>
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 #include <iostream>
 #include <set>
@@ -46,6 +58,9 @@
 // Network utilities.
 namespace net {
 
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+#else /* MESOS_MSVC || MESOS_MINGW */
 inline struct addrinfo createAddrInfo(int socktype, int family, int flags)
 {
   struct addrinfo addr;
@@ -56,6 +71,7 @@ inline struct addrinfo createAddrInfo(int socktype, int family, int flags)
 
   return addr;
 }
+#endif /* MESOS_MSVC || MESOS_MINGW */
 
 
 // TODO(evelinad): Move this to Address.
@@ -90,6 +106,10 @@ inline struct sockaddr_storage createSockaddrStorage(const IP& ip, int port)
 // themselves by need.
 inline void initialize()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   // We use a static struct variable to initialize in a thread-safe
   // way, at least with respect to calls within net::*, since there
   // is no way to guarantee that another library is not concurrently
@@ -109,6 +129,7 @@ inline void initialize()
   };
 
   static CURL curl;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -118,6 +139,10 @@ inline void initialize()
 // any useful value.)
 inline Try<Bytes> contentLength(const std::string& url)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   initialize();
 
   CURL* curl = curl_easy_init();
@@ -147,6 +172,7 @@ inline Try<Bytes> contentLength(const std::string& url)
   }
 
   return Bytes(uint64_t(result));
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -155,6 +181,10 @@ inline Try<Bytes> contentLength(const std::string& url)
 // path.
 inline Try<int> download(const std::string& url, const std::string& path)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   initialize();
 
   Try<int> fd = os::open(
@@ -200,11 +230,16 @@ inline Try<int> download(const std::string& url, const std::string& path)
   }
 
   return Try<int>::some(code);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
 inline Try<std::string> hostname()
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   char host[512];
 
   if (gethostname(host, sizeof(host)) < 0) {
@@ -225,6 +260,7 @@ inline Try<std::string> hostname()
   freeaddrinfo(result);
 
   return hostname;
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -233,6 +269,10 @@ inline Try<std::string> hostname()
 // returned.
 inline Try<std::string> getHostname(const IP& ip)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   struct sockaddr_storage storage = createSockaddrStorage(ip, 0);
   char hostname[MAXHOSTNAMELEN];
 
@@ -250,6 +290,7 @@ inline Try<std::string> getHostname(const IP& ip)
   }
 
   return std::string(hostname);
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 
@@ -257,6 +298,10 @@ inline Try<std::string> getHostname(const IP& ip)
 // obtained.
 inline Try<IP> getIP(const std::string& hostname, int family)
 {
+#if defined(MESOS_MSVC) || defined(MESOS_MINGW)
+  // TODO(aclemmer): timespec does not exist on Windows
+  throw 99;
+#else /* MESOS_MSVC || MESOS_MINGW */
   struct addrinfo hints = createAddrInfo(SOCK_STREAM, family, 0);
   struct addrinfo* result = NULL;
 
@@ -280,6 +325,7 @@ inline Try<IP> getIP(const std::string& hostname, int family)
 
   freeaddrinfo(result);
   return ip.get();
+#endif /* MESOS_MSVC || MESOS_MINGW */
 }
 
 

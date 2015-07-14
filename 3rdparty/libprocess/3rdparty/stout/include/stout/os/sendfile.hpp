@@ -28,6 +28,11 @@
 #include <stout/os/signals.hpp>
 #include <stout/unreachable.hpp>
 
+#if defined(MESOS_MSVC)
+// TODO(aclemmer): This is to get around the fact that Windows doesn't use ssize_t; find a better place for it
+typedef int ssize_t;
+#endif /* MESOS_MSVC */
+
 namespace os {
 
 // Returns the amount of bytes written from the input file
@@ -57,6 +62,9 @@ inline ssize_t sendfile(int s, int fd, off_t offset, size_t length)
   }
 
   return _length;
+#else // __APPLE__
+  // TODO(aclemmer): does not work on MSVC
+  throw 99;
 #endif // __APPLE__
 }
 

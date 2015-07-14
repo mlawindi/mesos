@@ -158,6 +158,10 @@ public:
       const http::Response& response,
       const http::Request& request)
   {
+#if defined(MESOS_MSVC)
+    // TODO(aclemmer): doesn't work on MSVC
+    throw 99;
+#else /* MESOS_MSVC */
     std::ostringstream out;
 
     // TODO(benh): Check version?
@@ -231,6 +235,7 @@ public:
 
     return out.str();
   }
+#endif /* MESOS_MSVC */
 };
 
 
