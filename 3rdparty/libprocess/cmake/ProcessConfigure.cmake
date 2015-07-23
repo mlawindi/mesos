@@ -134,11 +134,13 @@ set(PROCESS_LIBS
 
 if (NOT WIN32)
   find_package(ZLIB REQUIRED)
-  find_library(LIBRT_LIBRARIES rt REQUIRED)
+
+  if (LINUX)
+    set(PROCESS_LIBS ${PROCESS_LIBS} rt)
+  endif (LINUX)
 
   set(PROCESS_LIBS
     ${PROCESS_LIBS}
     ${ZLIB_LIBRARIES}
-    ${LIBRT_LIBRARIES}
     )
 endif (NOT WIN32)
