@@ -64,27 +64,46 @@ if (NOT WIN32)
   set(LIBEV_BUILD_CMD  make)
   # Patch libev to keep it from reaping child processes.
   PATCH_CMD(${PROCESS_3RD_SRC}/libev-4.15.patch LIBEV_PATCH_CMD)
-else (NOT WIN32)
-  # Quotes are important in the following commands. Building glog on WIN32
-  # must be done in Visual Studio, and in that case, these commands must be
-  # nops. But if you take out the quote marks, CMake will treat this as an
-  # empty build command, and will attempt to build glog as a CMake project.
-  set(GLOG_CONFIG_CMD  "")
-  set(GLOG_BUILD_CMD   "")
-  set(GLOG_INSTALL_CMD "")
-  set(GLOG_PATCH_CMD   "")
-
-  set(RY_BUILD_CMD   "")
-  set(RY_INSTALL_CMD "")
-
-  set(LIBEV_CONFIG_CMD "")
-  set(LIBEV_BUILD_CMD  "")
-  set(LIBEV_PATCH_CMD  "")
 endif (NOT WIN32)
 
 # THIRD-PARTY LIBRARIES. Tell the build system how to pull in and build third-
 # party libraries at compile time, using the ExternalProject_Add macro.
 ##############################################################################
+# NOTE ON ExternalProject_Add CALLS HERE: In the next section, we pass some
+# quoted values into `ExternalProject_Add`. We do this because some of these
+# projects can't (or shouldn't) be built from the command line (for various
+# reasons), and we need to get creative about what values we pass in to make
+# sure these operations are no-ops.
+#
+# There are two flavors of hack here. The first you will see is a hack we use
+# to avoid building third-party projects (like Boost) that _NEVER_ need to be
+# built for Mesos. This hack looks like this:
+#
+#     BUILD_COMMAND ""
+#
+# In at least most of the major releases of CMake, if we don't set parameters
+# like BUILD_COMMAND, we will trigger the default behavior of that parameter;
+# usually, CMake attempts to configure/build/install/whatever the third-party
+# project as if it were a CMake (or perhaps make) project. Since these projects
+# are not CMake projects, they will error out. This hack lets us avoid that
+# fate altogether.
+#
+# The second hack allows us to build a project _EXCEPT_ on Windows. It looks
+# like this:
+#
+#     BUILD_COMMAND "${GLOG_BUILD_CMD}"
+#
+# The problem is that there is currently no way to build glog on Windows from
+# the command line. But, if GLOG_BUILD_CMD is not set (or if it's an empty
+# list), then we run into the same problem as last problem; CMake sees that
+# BUILD_COMMAND is unset, and will default to the "normal" behavior of trying
+# to configure/build/install the project as if it was a CMake project. (Since
+# it is not, it will of course error out on Windows.)
+#
+# The work-around is to add quotes to the outside of the variable. In this case,
+# ${GLOG_BUILD_CMD} will expand to unset, which will cause us to pass the empty
+# string as a parameter to the function. This of course is different from not
+# setting the parameter value at all, and hence the work-around works.
 ExternalProject_Add(
   ${BOOST_TARGET}
   PREFIX            ${BOOST_CMAKE_ROOT}
@@ -97,11 +116,12 @@ ExternalProject_Add(
 ExternalProject_Add(
   ${GLOG_TARGET}
   PREFIX            ${GLOG_CMAKE_ROOT}
-  PATCH_COMMAND     ${GLOG_PATCH_CMD}
-  CONFIGURE_COMMAND ${GLOG_CONFIG_CMD}
-  BUILD_COMMAND     ${GLOG_BUILD_CMD}
-  INSTALL_COMMAND   ${GLOG_INSTALL_CMD}
+  PATCH_COMMAND     "${GLOG_PATCH_CMD}"
+  CONFIGURE_COMMAND "${GLOG_CONFIG_CMD}"
+  BUILD_COMMAND     "${GLOG_BUILD_CMD}"
+  INSTALL_COMMAND   "${GLOG_INSTALL_CMD}"
   URL               ${GLOG_URL}
+  DOWNLOAD_NAME     glog-${GLOG_VERSION}.tar.gz
   )
 
 ExternalProject_Add(
@@ -118,17 +138,17 @@ ExternalProject_Add(
   ${HTTP_PARSER_TARGET}
   PREFIX            ${HTTP_PARSER_CMAKE_ROOT}
   CONFIGURE_COMMAND ""
-  BUILD_COMMAND     ${RY_BUILD_CMD}
-  INSTALL_COMMAND   ${RY_INSTALL_CMD}
+  BUILD_COMMAND     "${RY_BUILD_CMD}"
+  INSTALL_COMMAND   "${RY_INSTALL_CMD}"
   URL               ${HTTP_PARSER_URL}
   )
 
 ExternalProject_Add(
   ${LIBEV_TARGET}
   PREFIX            ${LIBEV_CMAKE_ROOT}
-  PATCH_COMMAND     ${LIBEV_PATCH_CMD}
-  CONFIGURE_COMMAND ${LIBEV_CONFIG_CMD}
-  BUILD_COMMAND     ${LIBEV_BUILD_CMD}
+  PATCH_COMMAND     "${LIBEV_PATCH_CMD}"
+  CONFIGURE_COMMAND "${LIBEV_CONFIG_CMD}"
+  BUILD_COMMAND     "${LIBEV_BUILD_CMD}"
   INSTALL_COMMAND   ""
   URL               ${LIBEV_URL}
   )
@@ -140,7 +160,7 @@ if (WIN32)
   # TODO(hausdorff): maybe try to incorporate this into findpackage for Windows
   ExternalProject_Add(
     ${CURL_TARGET}
-    PREFIX            "${CURL_CMAKE_ROOT}"
+    PREFIX            ${CURL_CMAKE_ROOT}
     PATCH_COMMAND     ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND     ""
@@ -177,21 +197,25 @@ if (NOT WIN32)
 endif (NOT WIN32)
 
 ExternalProject_Add(
+  # See note about ExternalProject_Add to understand quirky actual parameters
+  # passed in here.
   ${GMOCK_TARGET}
   PREFIX            ${GMOCK_CMAKE_ROOT}
-  CONFIGURE_COMMAND ${GMOCK_CONFIG_CMD}
-  BUILD_COMMAND     ${GMOCK_BUILD_CMD}
+  CONFIGURE_COMMAND "${GMOCK_CONFIG_CMD}"
+  BUILD_COMMAND     "${GMOCK_BUILD_CMD}"
   INSTALL_COMMAND   ""
   URL               ${GMOCK_URL}
   )
 
 ExternalProject_Add(
+  # See note about ExternalProject_Add to understand quirky actual parameters
+  # passed in here.
   ${PROTOBUF_TARGET}
   PREFIX            ${PROTOBUF_CMAKE_ROOT}
-  PATCH_COMMAND     ${PROTOBUF_PATCH_CMD}
-  CONFIGURE_COMMAND ${PROTOBUF_CONFIG_CMD}
-  BUILD_COMMAND     ${PROTOBUF_BUILD_CMD}
-  INSTALL_COMMAND   ${PROTOBUF_INSTALL_CMD}
+  PATCH_COMMAND     "${PROTOBUF_PATCH_CMD}"
+  CONFIGURE_COMMAND "${PROTOBUF_CONFIG_CMD}"
+  BUILD_COMMAND     "${PROTOBUF_BUILD_CMD}"
+  INSTALL_COMMAND   "${PROTOBUF_INSTALL_CMD}"
   URL               ${PROTOBUF_URL}
   )
 
