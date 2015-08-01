@@ -42,6 +42,28 @@ else (REBUNDLED)
 endif (REBUNDLED)
 
 if (WIN32)
+  # NOTE: I (hausdorff) had to port glog v0.3.4 to support compilation with
+  # MSVC 1900 (it works on MSVC 1800, but not 1900). I have submitted the patch
+  # to the glog project which you can see in pull request #43[1].
+  #
+  # Note also that this tarball actually points directly at the branch I'm
+  # issuing the PR from, and uses the GitHub REST API to get a tarball of it,
+  # which IMO is stictly better than pulling a tarball out of 3rdparty, or
+  # running `patch` on a tarball version of the vanilla 0.3.4 release, because
+  # it means that this code will automatically be up-to-date, and to transition
+  # to the next release of glog (when this will presumably be fixed), we need
+  # only change this line.
+  #
+  # Finally, for reasons that are not entirely clear to me, MSVC 1900 and MSVC
+  # 1800 builds of glog were not linker-compatible, and after some time with
+  # the MSVC team, I decided it was easier to port than it was to figure out
+  # that problem, so that's why we can't "just" use another version of MSVC.
+  # Also, we want to use one version of MSVC to compile all the third-party
+  # libraries anyway, because it's easier to justify to customers.
+  #
+  # [1] https://github.com/google/glog/pull/43
+  set(GLOG_URL https://github.com/hausdorff/glog/tarball/glog-${GLOG_VERSION}-msvc1900)
+
   # TODO(hausdorff): points at a random tarball in my (hausdorff's) repository.
   # We need a more permanent solution for this eventually.
   set(CURL_URL https://github.com/hausdorff/3rdparty/raw/master/curl-static-${CURL_VERSION}.tar.gz)

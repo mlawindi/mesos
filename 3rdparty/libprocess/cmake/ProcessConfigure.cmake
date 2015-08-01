@@ -52,10 +52,17 @@ set(PROCESS_3RD_BIN ${CMAKE_BINARY_DIR}/3rdparty/libprocess/3rdparty)
 set(STOUT ${PROCESS_3RD_SRC}/stout)
 
 EXTERNAL("boost"       "1.53.0"  "${PROCESS_3RD_BIN}")
-EXTERNAL("glog"        "0.3.3"   "${PROCESS_3RD_BIN}")
 EXTERNAL("picojson"    "4f93734" "${PROCESS_3RD_BIN}")
 EXTERNAL("http_parser" "1c3624a" "${PROCESS_3RD_BIN}")
 EXTERNAL("libev"       "4.15"    "${PROCESS_3RD_BIN}")
+
+if (NOT WIN32)
+  EXTERNAL("glog" "0.3.3" "${PROCESS_3RD_BIN}")
+elseif (WIN32)
+  # glog 0.3.3 does not compile out of the box on Windows. Therefore, we
+  # require 0.3.4.
+  EXTERNAL("glog" "0.3.4" "${PROCESS_3RD_BIN}")
+endif (NOT WIN32)
 
 set(GLOG_LIB ${GLOG_ROOT}-lib/lib)
 
