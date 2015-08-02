@@ -23,7 +23,16 @@ namespace os {
 
 inline Try<Nothing> close(int fd)
 {
-  UNIMPLEMENTED;
+  // TODO(hausdorff): think about how to merge this file with the POSIX
+  // counterpart; the only difference is the _close call below (which, in POSIX
+  // is `close`). Note that if we use a macro, that macro will get exported to
+  // anyone who uses this file, which is the cause of much insanity in the MSVC
+  // world (cf. -DNOMINMAX).
+  if (::_close(fd) != 0) {
+    return ErrnoError();
+  }
+
+  return Nothing();
 }
 
 } // namespace os {
