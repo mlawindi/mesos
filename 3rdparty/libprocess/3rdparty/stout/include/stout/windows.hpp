@@ -117,4 +117,118 @@ decltype(_mkdir(path))
 }
 
 
+// Permissions API. (cf. MESOS-3176 to track ongoing permissions work.)
+//
+// We are currently able to emulate a subset of the POSIX permissions model
+// with the Windows model:
+//   [x] User write permissions.
+//   [x] User read permissions.
+//   [ ] User execute permissions.
+//   [ ] Group permissions of any sort.
+//   [ ] Other permissions of any sort.
+//   [x] Flags to control "fallback" behavior (e.g., we might choose
+//       to fall back to user readability when the user passes the
+//       group readability flag in, since we currently do not support
+//       group readability).
+//
+//
+// Rationale:
+// Windows currently implements two permissions models: (1) an extremely
+// primitive permission model it largely inherited from DOS, and (2) the Access
+// Control List (ACL) API. Because there is no trivial way to map the classic
+// POSIX model into the ACL model, we have implemented POSIX-style permissions
+// in terms of the DOS model. The result is the permissions limitations above.
+//
+//
+// Flag implementation:
+// Flags fall into the following two categories.
+//   (1) Flags which exist in both permission models, but which have
+//       different names (e.g., `S_IRUSR` in POSIX is called `_S_IREAD` on
+//       Windows). In this case, we define the POSIX name to be the Windows
+//       value (e.g., we define `S_IRUSR` to have the same value as `_S_IREAD`),
+//       so that we can pass the POSIX name into Windows functions like
+//       `_open`.
+//   (2) Flags which exist only on POSIX (e.g., `S_IXUSR`). Here we
+//       define the POSIX name to be the value given in the glibc
+//       documentation[1], shifted left by 16 bits (since `mode_t`
+//       is unsigned short on POSIX and `int` on Windows). We give these
+//       flags glibc values to stay consistent, and so that existing
+//       calls to functions like `open` do not break when they try to
+//       use a flag that doesn't exist on Windows. But, of course,
+//       these flags do not affect the execution of these functions.
+//
+//
+// Flag strictness:
+// Because the current implementation does not directly support setting or
+// getting group or other permission bits on the Windows platform, there is a
+// question of what we should fall back to when these flags are passed in to
+// Stout methods.
+//
+// We let the user decide the "strictness" of the permission flag
+// semantics via compiler flags:
+//   * STRICT_GROUP_PERMISSIONS: When this is defined, the group
+//     permissions flags will not fall back to anything, and will be
+//     completely ignored. When not set, group permissions fall back
+//     to their user equivalents (e.g., if we pass the flag that sets
+//     group write permissions, we fall back to setting user write
+//     permissions.
+//   * STRICT_OTHER_PERMISSIONS: Same as above, but with other
+//     permissions.
+//
+//
+// Execute permissions:
+// Because DOS has no notion of "execute permissions", we define execute
+// permissions to be read permissions. This is not ideal, but it is closest to
+// being accurate.
+//
+//
+// [1] http://www.delorie.com/gnu/docs/glibc/libc_288.html
+
+
+// Corresponds to `mode_t` defined in sys/types.h of the POSIX spec.
+// See note above for an explanation of why this is an int instead of
+// unsigned short (as is common on *nix).
+typedef int mode_t;
+
+
+// User permission flags.
+const mode_t S_IRUSR = mode_t(_S_IREAD);  // Readable by user.
+const mode_t S_IWUSR = mode_t(_S_IWRITE); // Writeable by user.
+const mode_t S_IXUSR = S_IRUSR;           // Fallback to user read.
+const mode_t S_IRWXU = S_IRUSR | S_IWUSR | S_IXUSR;
+
+
+// Group permission flags. Lossy mapping to Windows permissions. See
+// note above about flag strictness for explanation.
+#ifdef STRICT_GROUP_PERMISSIONS
+const mode_t S_IRGRP = 0x00200000;        // No-op.
+const mode_t S_IWGRP = 0x00100000;        // No-op.
+const mode_t S_IXGRP = 0x00080000;        // No-op.
+#else // STRICT_GROUP_PERMISSIONS
+const mode_t S_IRGRP = mode_t(_S_IREAD);  // Fallback to user read.
+const mode_t S_IWGRP = mode_t(_S_IWRITE); // Fallback to user write.
+const mode_t S_IXGRP = S_IRGRP;           // Fallback to user read.
+#endif // STRICT_GROUP_PERMISSIONS
+const mode_t S_IRWXG = S_IRGRP | S_IWGRP | S_IXGRP;
+
+
+// Other permission flags. Lossy mapping to Windows permissions. See
+// note above about flag stictness for explanation.
+#ifdef STRICT_OTHER_PERMISSIONS
+const mode_t S_IROTH = 0x00040000;        // No-op.
+const mode_t S_IWOTH = 0x00020000;        // No-op.
+const mode_t S_IXOTH = 0x00010000;        // No-op.
+#else // STRICT_OTHER_PERMISSIONS
+const mode_t S_IROTH = mode_t(_S_IREAD);  // Fallback to user read.
+const mode_t S_IWOTH = mode_t(_S_IWRITE); // Fallback to user write.
+const mode_t S_IXOTH = S_IROTH;           // Fallback to user read.
+#endif // STRICT_OTHER_PERMISSIONS
+const mode_t S_IRWXO = S_IROTH | S_IWOTH | S_IXOTH;
+
+// Flags for set-ID-on-exec.
+const mode_t S_ISUID = 0x08000000;        // No-op.
+const mode_t S_ISGID = 0x04000000;        // No-op.
+const mode_t S_ISVTX = 0x02000000;        // No-op.
+
+
 #endif // __STOUT_WINDOWS_HPP__
