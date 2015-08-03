@@ -19,14 +19,51 @@
 
 #include <string>
 
+#include <stout/error.hpp>
+#include <stout/nothing.hpp>
 #include <stout/try.hpp>
+
+#include <stout/os/close.hpp>
 
 
 namespace os {
 
+// Windows does not support O_CLOEXEC, but we still want os::open to accept the
+// flag, as this will let us simplify code that calls it.
+#define O_CLOEXEC 02000000
+//#define O_CLOEXEC_UNDEFINED
+
 inline Try<int> open(const std::string& path, int oflag, mode_t mode = 0)
 {
-  UNIMPLEMENTED;
+  // TODO(hausdorff): remove these checks and implement this!
+#ifdef O_CLOEXEC_UNDEFINED
+  // Before we passing oflag to ::open, we need to strip the O_CLOEXEC
+  // flag since it's not supported.
+  bool cloexec = false;
+  if ((oflag & O_CLOEXEC) != 0) {
+    oflag &= ~O_CLOEXEC;
+    cloexec = true;
+  }
+#endif
+
+  int fd = ::open(path.c_str(), oflag, mode);
+
+  if (fd < 0) {
+    return ErrnoError();
+  }
+
+  // TODO(hausdorff): remove these checks and implement this!
+#ifdef O_CLOEXEC_UNDEFINED
+  if (cloexec) {
+    Try<Nothing> result = os::cloexec(fd);
+    if (result.isError()) {
+      os::close(fd);
+      return Error("Failed to set cloexec: " + result.error());
+    }
+  }
+#endif
+
+  return fd;
 }
 
 } // namespace os {
