@@ -16,21 +16,61 @@
 
 #include <string>
 
+#include <Windows.h>
+
 
 namespace os {
 
 inline bool exists(const std::string& path)
 {
-  UNIMPLEMENTED;
+  // NOTE: `_fullpath` is nop if path is already an absolute path.
+  char absolutePath[_MAX_PATH];
+  if (_fullpath(absolutePath, path.c_str(), _MAX_PATH) == NULL)
+  {
+    return false;
+  }
+
+  // NOTE: support for Unicode depends on platform. See also
+  // "documentation"[1] for why this is a check-if-file-exists idiom.
+  //
+  // [1] http://blogs.msdn.com/b/oldnewthing/archive/2007/10/23/5612082.aspx
+  DWORD attrs = GetFileAttributes(absolutePath);
+
+  bool fileNotFound = GetLastError() == ERROR_FILE_NOT_FOUND;
+  bool validPath = !(attrs == INVALID_FILE_ATTRIBUTES && fileNotFound);
+  bool isNotDirectory = (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
+
+  return validPath && isNotDirectory;
 }
 
 
 // Determine if the process identified by pid exists.
-// NOTE: Zombie processes have a pid and therefore exist. See os::process(pid)
-// to get details of a process.
+// NOTE: Zombie processes have a pid and therefore exist. See
+// os::process(pid) to get details of a process.
 inline bool exists(pid_t pid)
 {
-  UNIMPLEMENTED;
+  HANDLE handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+
+  // Note that `GetExitCode` will gracefully deal with the case that
+  // `handle` is `NULL`.
+  DWORD exitCode = 0;
+  BOOL exitCodeExists = GetExitCodeProcess(handle, &exitCode);
+
+  // `CloseHandle`, on the other hand, will throw an exception in the
+  // VS debugger if you pass it a broken handle. (cf. "Return value"
+  // section of the documentation[1].)
+  //
+  // [1] https://msdn.microsoft.com/en-us/library/windows/desktop/ms724211(v=vs.85).aspx
+  if (handle != NULL)
+  {
+    CloseHandle(handle);
+  }
+
+  // NOTE: Windows quirk, the exit code returned by the process can
+  // be the same number as `STILL_ACTIVE`, in which case this
+  // function will mis-report that the process is still alive.
+  bool result = exitCodeExists && exitCode == STILL_ACTIVE;
+  return result;
 }
 
 } // namespace os {
