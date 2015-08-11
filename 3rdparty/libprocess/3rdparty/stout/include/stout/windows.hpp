@@ -25,12 +25,39 @@
 //   * being in global scope
 //   * globally available throughout both the Stout codebase, and any code
 //     that links to it (such as Mesos).
+#include <fcntl.h>  // Uses file access flags like _O_CREAT.
 
-// Normally defined in unistd.h.
+// DEFINE CONSTANTS USED FOR WINDOWS COMPAT. Allows a lot of code on
+// Windows and POSIX systems to be the same, because we can pass the
+// same constants to functions we call to do things like file I/O.
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
+#define R_OK 0x4
+#define W_OK 0x2
+#define X_OK 0x0 // No such permission on Windows
+#define F_OK 0x0
+
+#define O_RDONLY _O_RDONLY
+#define O_WRONLY _O_WRONLY
+#define O_RDWR _O_RDWR
+#define O_CREAT _O_CREAT
+#define O_TRUNC _O_TRUNC
+#define O_APPEND _O_APPEND
+// TODO(josephw): No equivalent for O_NONBLOCK or O_SYNC
+
+#define MAXHOSTNAMELEN 64
+
+#define PATH_MAX _MAX_PATH
+
+// Corresponds to `mode_t` defined in sys/types.h of the POSIX spec.
+// See note in the "PERMISSIONS API" section for an explanation of
+// why this is an int instead of unsigned short (as is common on
+// *nix).
+typedef int mode_t;
+
+// FILE I/O FUNCTION ALIASES.
 inline auto write(int fd, const void* buffer, size_t count) ->
 decltype(_write(fd, buffer, count))
 {
@@ -49,39 +76,18 @@ decltype(_close(fildes))
   return _close(fildes);
 }
 
-// TODO(aclemmer): Not defined on Windows.  This value is temporary.
-#define MAXHOSTNAMELEN 64
-
-// Macros associated with ::access, usually defined in unistd.h.
-inline auto access(char const* fileName, int accessMode) ->
-decltype(_access(fileName, accessMode))
+// FILESYSTEM FUNCTION ALIASES.
+inline auto mkdir(const char *path, mode_t mode) ->
+decltype(_mkdir(path))
 {
-  return _access(fileName, accessMode);
+  return _mkdir(path);
 }
-#define R_OK 0x4
-#define W_OK 0x2
-#define X_OK 0x0 // No such permission on Windows
-#define F_OK 0x0
 
-// Aliases for file access modes.
-#include <fcntl.h>
-#define O_RDONLY _O_RDONLY
-#define O_WRONLY _O_WRONLY
-#define O_RDWR _O_RDWR
-#define O_CREAT _O_CREAT
-#define O_TRUNC _O_TRUNC
-#define O_APPEND _O_APPEND
-// TODO(josephw): No equivalent for O_NONBLOCK or O_SYNC
-
-// Alias for mkstemp (requires io.h).
 inline auto mkstemp(char* path) ->
 decltype(_mktemp_s(path, strlen(path) + 1))
 {
   return _mktemp_s(path, strlen(path) + 1);
 }
-
-// Alias for realpath.
-#define PATH_MAX _MAX_PATH
 
 inline auto realpath(char const* path, char* resolved) ->
 decltype(_fullpath(resolved, path, PATH_MAX))
@@ -89,16 +95,10 @@ decltype(_fullpath(resolved, path, PATH_MAX))
   return _fullpath(resolved, path, PATH_MAX);
 }
 
-// Corresponds to `mode_t` defined in sys/types.h of the POSIX spec.
-// See note above for an explanation of why this is an int instead of
-// unsigned short (as is common on *nix).
-typedef int mode_t;
-
-// Alias for mkdir (requires direct.h).
-inline auto mkdir(const char *path, mode_t mode) ->
-decltype(_mkdir(path))
+inline auto access(char const* fileName, int accessMode) ->
+decltype(_access(fileName, accessMode))
 {
-  return _mkdir(path);
+  return _access(fileName, accessMode);
 }
 
 // PERMISSIONS API. cf. MESOS-3176 to track ongoing permissions work.
@@ -159,12 +159,6 @@ decltype(_mkdir(path))
 //     permissions.
 //
 // [1] http://www.delorie.com/gnu/docs/glibc/libc_288.html
-
-
-// Corresponds to `mode_t` defined in sys/types.h of the POSIX spec.
-// See note above for an explanation of why this is an int instead of
-// unsigned short (as is common on *nix).
-typedef int mode_t;
 
 // USER PERMISSION FLAGS.
 const mode_t S_IRUSR = mode_t(_S_IREAD);  // readable by user
