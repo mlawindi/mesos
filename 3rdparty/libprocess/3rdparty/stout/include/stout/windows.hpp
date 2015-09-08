@@ -15,7 +15,13 @@
 #define __STOUT_WINDOWS_HPP__
 
 
+#ifndef __WINDOWS__
+#error "windows.hpp should only be included on Windows platforms."
+#endif // __WINDOWS__
+
+
 #include <fcntl.h>  // For file access flags like `_O_CREAT`.
+
 
 #include <Windows.h>
 

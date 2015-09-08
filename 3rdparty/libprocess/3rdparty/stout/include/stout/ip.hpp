@@ -63,10 +63,6 @@
 #include <stout/try.hpp>
 #include <stout/unreachable.hpp>
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
-#endif // __WINDOWS__
-
 
 namespace net {
 

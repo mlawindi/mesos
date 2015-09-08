@@ -19,10 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
-#else
+#ifndef __WINDOWS__
 #include <unistd.h>
+#else // __WINDOWS__
+#include <stout/windows.hpp>
 #endif // __WINDOWS__
 
 #include <string>
