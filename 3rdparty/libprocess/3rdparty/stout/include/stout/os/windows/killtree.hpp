@@ -14,7 +14,9 @@
 #ifndef __STOUT_OS_WINDOWS_KILLTREE_HPP__
 #define __STOUT_OS_WINDOWS_KILLTREE_HPP__
 
-#include <stdlib.h>
+#include <stout/os/pstree.hpp>
+
+#include <stout/windows.hpp>
 
 
 namespace os {
