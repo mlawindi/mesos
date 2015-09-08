@@ -30,6 +30,7 @@
 #include <stout/nothing.hpp>
 #include <stout/option.hpp>
 #include <stout/path.hpp>
+#include <stout/result.hpp>
 #include <stout/try.hpp>
 #include <stout/windows.hpp>
 

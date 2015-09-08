@@ -20,8 +20,9 @@
 #endif // __WINDOWS__
 
 
+#include <direct.h>
 #include <fcntl.h>  // For file access flags like `_O_CREAT`.
-
+#include <io.h>
 
 #include <Windows.h>
 
