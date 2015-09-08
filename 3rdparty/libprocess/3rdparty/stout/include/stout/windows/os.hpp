@@ -25,6 +25,7 @@
 #include <set>
 #include <string>
 
+#include <stout/os/close.hpp>
 #include <stout/duration.hpp>
 #include <stout/none.hpp>
 #include <stout/nothing.hpp>
@@ -132,6 +133,7 @@ inline int execvpe(const char* file, char** argv, char** envp)
 }
 
 
+#if 0
 inline Try<Nothing> chown(
     uid_t uid,
     gid_t gid,
@@ -140,6 +142,7 @@ inline Try<Nothing> chown(
 {
   UNIMPLEMENTED;
 }
+#endif // 0
 
 
 // Changes the specified path's user and group ownership to that of
@@ -180,16 +183,20 @@ inline Try<Nothing> mknod(
 }
 
 
+#if 0
 inline Result<uid_t> getuid(const Option<std::string>& user = None())
 {
   UNIMPLEMENTED;
 }
+#endif // 0
 
 
+#if 0
 inline Result<gid_t> getgid(const Option<std::string>& user = None())
 {
   UNIMPLEMENTED;
 }
+#endif // 0
 
 
 inline Try<Nothing> su(const std::string& user)
@@ -204,10 +211,12 @@ inline std::string getcwd()
 }
 
 
+#if 0
 inline Result<std::string> user(Option<uid_t> uid = None())
 {
   UNIMPLEMENTED;
 }
+#endif // 0
 
 
 // Suspends execution for the given duration.

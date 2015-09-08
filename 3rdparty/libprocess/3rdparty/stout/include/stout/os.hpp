@@ -14,33 +14,33 @@
 #ifndef __STOUT_OS_HPP__
 #define __STOUT_OS_HPP__
 
-#ifdef __WINDOWS__
-#include <direct.h>
-#endif // __WINDOWS__
 #ifdef __sun
 #include <sys/loadavg.h>
 #define dirfd(dir) ((dir)->d_fd)
 #ifndef NAME_MAX
 #define NAME_MAX MAXNAMLEN
 #endif // NAME_MAX
-#else
+#elif !defined(__WINDOWS__)
 #include <fts.h>
 #endif // __sun
 #include <fcntl.h>
+#ifndef __WINDOWS__
 #include <glob.h>
 #include <grp.h>
-#ifdef __WINDOWS__
-#include <io.h>
 #endif // __WINDOWS__
 #include <limits.h>
+#ifndef __WINDOWS__
 #include <netdb.h>
 #include <pwd.h>
+#endif // __WINDOWS__
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef __WINDOWS__
 #include <unistd.h>
 #include <utime.h>
+#endif // __WINDOWS__
 
 #include <glog/logging.h>
 
@@ -52,11 +52,11 @@
 #include <sys/sysinfo.h>
 #endif // __linux__
 #include <sys/types.h>
-#ifdef __WINDOWS__
+#ifndef __WINDOWS__
 #include <sys/utime.h>
-#endif // __WINDOWS
 #include <sys/utsname.h>
 #include <sys/wait.h>
+#endif // __WINDOWS
 
 #include <list>
 #include <queue>
