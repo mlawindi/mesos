@@ -115,3 +115,16 @@ endif (WIN32)
 # NOTE: The third-party configuration variables exported here are used
 # throughout the project, so it's important that this config script goes here.
 include(ProcessConfigure)
+
+# Generate make batch script when WIN32.
+if (WIN32)
+  # Define MESOS_BUILD_CMD which build through Visual Studio solution file.
+  VS_BUILD_CMD(${PROJECT_NAME_UPPER}
+    ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.sln
+    "")
+
+  string(REPLACE ";" " " BUILD_CMD "${${PROJECT_NAME_UPPER}_BUILD_CMD}")
+  file(WRITE
+    ${CMAKE_BINARY_DIR}/make.bat
+    ${BUILD_CMD})
+endif (WIN32)
