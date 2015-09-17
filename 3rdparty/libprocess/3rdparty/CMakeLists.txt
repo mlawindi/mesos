@@ -103,6 +103,26 @@ if (NOT WIN32)
   set(LIBEV_INSTALL_CMD mkdir -p ${LIBEV_ROOT}-lib/lib && cp -r ${LIBEV_ROOT}-build/.libs/. ${LIBEV_ROOT}-lib/lib)
   # Patch libev to keep it from reaping child processes.
   PATCH_CMD(${PROCESS_3RD_SRC}/libev-4.15.patch LIBEV_PATCH_CMD)
+else (NOT WIN32)
+  # NOTE: The no-ops are important in the following commands. Building `glog`
+  # on WIN32 must be done in Visual Studio. In that case, these commands must
+  # be no-ops. If the no-ops are removed, then CMake will treat `glog` as an
+  # empty build command and will attemp to build `glog` as a CMake project.
+  set(GLOG_CONFIG_CMD  ${CMAKE_NOOP})
+  set(GLOG_INSTALL_CMD ${CMAKE_NOOP})
+  set(GLOG_PATCH_CMD   ${CMAKE_NOOP})
+  VS_BUILD_CMD(
+      GLOG
+      ${GLOG_ROOT}/google-glog.sln
+      ${CMAKE_BUILD_TYPE}
+      "libglog")
+
+  set(RY_BUILD_CMD   ${CMAKE_NOOP})
+  set(RY_INSTALL_CMD ${CMAKE_NOOP})
+
+  set(LIBEV_CONFIG_CMD ${CMAKE_NOOP})
+  set(LIBEV_BUILD_CMD  ${CMAKE_NOOP})
+  set(LIBEV_PATCH_CMD  ${CMAKE_NOOP})
 endif (NOT WIN32)
 
 # Third-party libraries. Tell the build system how to pull in and build third-
@@ -229,12 +249,29 @@ elseif (NOT WIN32)
   set(GMOCK_CONFIG_CMD  ${GMOCK_ROOT}/configure --prefix=${GMOCK_ROOT}-lib)
   set(GMOCK_BUILD_CMD   make)
   set(GMOCK_INSTALL_CMD mkdir -p ${GMOCK_ROOT}-lib/lib && cp -r ${GMOCK_ROOT}-build/lib/.libs/. ${GMOCK_ROOT}-lib/lib && cp -r ${GMOCK_ROOT}-build/gtest/lib/.libs/. ${GMOCK_ROOT}-lib/lib)
+elseif (WIN32)
+  set(GMOCK_CONFIG_CMD ${CMAKE_NOOP})
+  VS_BUILD_CMD(
+      GMOCK
+      ${GMOCK_ROOT}/msvc/2010/gmock.sln
+      ${CMAKE_BUILD_TYPE}
+      "gmock gmock_main")
 endif (APPLE)
 
 if (NOT WIN32)
   set(PROTOBUF_CONFIG_CMD  ${PROTOBUF_ROOT}/src/../configure --prefix=${PROTOBUF_LIB})
   set(PROTOBUF_BUILD_CMD   make)
   set(PROTOBUF_INSTALL_CMD make install)
+else (NOT WIN32)
+  set(PROTOBUF_CONFIG_CMD  ${CMAKE_NOOP})
+  set(PROTOBUF_INSTALL_CMD ${CMAKE_NOOP})
+  set(PROTOBUF_PATCH_CMD   ${CMAKE_NOOP})
+
+  VS_BUILD_CMD(
+      PROTOBUF
+      ${PROTOBUF_ROOT}/vsprojects/protobuf.sln
+      ${CMAKE_BUILD_TYPE}
+      "libprotobuf libprotoc protoc")
 endif (NOT WIN32)
 
 ExternalProject_Add(
