@@ -61,7 +61,6 @@ if (NOT WIN32)
     os/signals_tests.cpp
     subcommand_tests.cpp
     svn_tests.cpp
-    thread_tests.cpp
     )
 endif (NOT WIN32)
 
