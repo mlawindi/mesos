@@ -33,6 +33,10 @@ option(
   )
 set(CMAKE_VERBOSE_MAKEFILE ${VERBOSE})
 
+if (WIN32)
+  set(ENABLE_LIBEVENT TRUE)
+endif (WIN32)
+
 # CMAKE MODULE SETUP.
 #####################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
