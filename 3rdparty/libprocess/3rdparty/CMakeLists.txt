@@ -61,6 +61,7 @@ if (WIN32)
   set(GLOG_URL     https://github.com/hausdorff/glog/tarball/glog-${GLOG_VERSION}-msvc1900)
   set(CURL_URL     ${UPSTREAM_URL}/curl-static-${CURL_VERSION}.tar.gz)
   set(LIBEVENT_URL ${UPSTREAM_URL}/libevent-release-${LIBEVENT_VERSION}.tar.gz)
+  set(LIBAPR_URL   ${UPSTREAM_URL}/libapr-${LIBAPR_VERSION}.tar.gz)
 endif (WIN32)
 
 # Define build/patch/configure commands for third-party libs.
@@ -117,6 +118,8 @@ elseif (WIN32)
   set(RY_INSTALL_CMD ${CMAKE_NOOP})
 
   set(LIBEVENT_INSTALL_CMD ${CMAKE_NOOP})
+
+  set(LIBAPR_INSTALL_CMD ${CMAKE_NOOP})
 endif (NOT WIN32)
 
 # Third-party libraries. Tell the build system how to pull in and build third-
@@ -179,6 +182,15 @@ elseif (ENABLE_LIBEVENT)
     URL             ${LIBEVENT_URL}
     )
 endif (NOT ENABLE_LIBEVENT)
+
+if (WIN32)
+  ExternalProject_Add(
+    ${LIBAPR_TARGET}
+    PREFIX          ${LIBAPR_CMAKE_ROOT}
+    INSTALL_COMMAND ${LIBAPR_INSTALL_CMD}
+    URL             ${LIBAPR_URL}
+    )
+endif (WIN32)
 
 # WINDOWS THIRD-PARTY LIBRARIES. Windows has no package manager, so we download
 # them here.
