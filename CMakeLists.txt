@@ -36,6 +36,7 @@ set(CMAKE_VERBOSE_MAKEFILE ${VERBOSE})
 # CMAKE MODULE SETUP.
 #####################
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/libprocess/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/libprocess/cmake/macros)
 
@@ -43,6 +44,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/libprocess/cmake/macr
 include(Common)
 include(External)
 include(PatchCommand)
+include(Versions)
 include(VsBuildCommand)
 
 # Configuration.
