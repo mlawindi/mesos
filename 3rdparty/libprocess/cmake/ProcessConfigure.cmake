@@ -64,14 +64,56 @@ elseif (WIN32)
   # Glog 0.3.3 does not compile out of the box on Windows. Therefore, we
   # require 0.3.4.
   EXTERNAL("glog" "0.3.4" "${PROCESS_3RD_BIN}")
-endif (NOT WIN32)
 
-set(GLOG_LIB ${GLOG_ROOT}-lib/lib)
-
-# Directory structure for windows-only third-party libs.
-########################################################
-if (WIN32)
+  # NOTE: We expect cURL exists on Unix (usually pulled in with a package
+  # manager), but Windows has no package manager, so we have to go get it.
   EXTERNAL("curl" ${CURL_VERSION} "${PROCESS_3RD_BIN}")
+endif (NOT WIN32)
+set(GLOG_LIB_ROOT ${GLOG_ROOT}-lib/lib)
+
+# Convenience variables for include directories of third-party dependencies.
+set(PROCESS_INCLUDE_DIR     ${PROCESS_3RD_SRC}/../include)
+set(STOUT_INCLUDE_DIR       ${STOUT}/include)
+
+set(BOOST_INCLUDE_DIR       ${BOOST_ROOT})
+set(GPERFTOOLS_INCLUDE_DIR  ${GPERFTOOLS}/src)
+set(HTTP_PARSER_INCLUDE_DIR ${HTTP_PARSER_ROOT})
+set(LIBEV_INCLUDE_DIR       ${LIBEV_ROOT})
+set(PICOJSON_INCLUDE_DIR    ${PICOJSON_ROOT})
+
+if (WIN32)
+  set(CURL_INCLUDE_DIR ${CURL_ROOT}/include)
+  set(GLOG_INCLUDE_DIR ${GLOG_ROOT}/src/windows)
+else (WIN32)
+  set(GLOG_INCLUDE_DIR ${GLOG_LIB_ROOT}/include)
+endif (WIN32)
+
+# Convenience variables for `lib` directories of built third-party dependencies.
+set(HTTP_PARSER_LIB_DIR ${HTTP_PARSER_ROOT}-build)
+set(LIBEV_LIB_DIR       ${LIBEV_ROOT}-build/.libs)
+
+if (WIN32)
+  set(CURL_LIB_DIR ${CURL_ROOT}/lib)
+  set(GLOG_LIB_DIR ${GLOG_ROOT}/Debug)
+else (WIN32)
+  set(GLOG_LIB_DIR ${GLOG_LIB_ROOT}/lib)
+endif (WIN32)
+
+# Convenience variables for "lflags", the symbols we pass to CMake to generate
+# things like `-L/path/to/glog` or `-lglog`.
+set(HTTP_PARSER_LFLAG http_parser)
+set(LIBEV_LFLAG       ev)
+
+if (WIN32)
+  # Necessary because the lib names for (e.g.) glog are generated incorrectly
+  # on Windows. That is, on *nix, the glog binary should be (e.g.) libglog.so,
+  # and on Windows it should be glog.lib. But on Windows, it's actually
+  # libglog.lib. Hence, we have to special case it here because CMake assumes
+  # the library names are generated correctly.
+  set(CURL_LFLAG libcurl_a)
+  set(GLOG_LFLAG libglog)
+else (WIN32)
+  set(GLOG_LFLAG glog)
 endif (WIN32)
 
 # Define process library dependencies. Tells the process library build targets
@@ -91,35 +133,17 @@ set(PROCESS_DEPENDENCIES
 ###############################################################################
 set(PROCESS_INCLUDE_DIRS
   ${PROCESS_INCLUDE_DIRS}
-  ${PROCESS_3RD_SRC}/../include
-  ${STOUT}/include
-  ${BOOST_ROOT}
-  ${LIBEV_ROOT}
-  ${PICOJSON_ROOT}
-  )
-
-if (WIN32)
-  set(PROCESS_INCLUDE_DIRS
-    ${PROCESS_INCLUDE_DIRS}
-    ${GLOG_ROOT}/src/windows
-    )
-else (WIN32)
-  set(PROCESS_INCLUDE_DIRS
-    ${PROCESS_INCLUDE_DIRS}
-    ${GLOG_LIB}/include
-    )
-endif (WIN32)
-
-set(PROCESS_INCLUDE_DIRS
-  ${PROCESS_INCLUDE_DIRS}
-  ${HTTP_PARSER_ROOT}
+  ${PROCESS_INCLUDE_DIR}
+  ${STOUT_INCLUDE_DIR}
+  ${BOOST_INCLUDE_DIR}
+  ${LIBEV_INCLUDE_DIR}
+  ${PICOJSON_INCLUDE_DIR}
+  ${GLOG_INCLUDE_DIR}
+  ${HTTP_PARSER_INCLUDE_DIR}
   )
 
 if (HAS_GPERFTOOLS)
-  set(PROCESS_INCLUDE_DIRS
-    ${PROCESS_INCLUDE_DIRS}
-    ${GPERFTOOLS}/src
-    )
+  set(PROCESS_INCLUDE_DIRS ${PROCESS_INCLUDE_DIRS} ${GPERFTOOLS_INCLUDE_DIR})
 endif (HAS_GPERFTOOLS)
 
 # Define third-party lib install directories. Used to tell the compiler
@@ -128,9 +152,9 @@ endif (HAS_GPERFTOOLS)
 ########################################################################
 set(PROCESS_LIB_DIRS
   ${PROCESS_LIB_DIRS}
-  ${GLOG_LIB}/lib
-  ${LIBEV_ROOT}-build/.libs
-  ${HTTP_PARSER_ROOT}-build
+  ${GLOG_LIB_DIR}
+  ${LIBEV_LIB_DIR}
+  ${HTTP_PARSER_LIB_DIR}
   )
 
 # Define third-party libs. Used to generate flags that the linker uses to
@@ -141,9 +165,9 @@ find_package(Threads REQUIRED)
 set(PROCESS_LIBS
   ${PROCESS_LIBS}
   ${PROCESS_TARGET}
-  glog
-  ev
-  http_parser
+  ${GLOG_LFLAG}
+  ${LIBEV_LFLAG}
+  ${HTTP_PARSER_LFLAG}
   ${CMAKE_THREAD_LIBS_INIT}
   )
 
