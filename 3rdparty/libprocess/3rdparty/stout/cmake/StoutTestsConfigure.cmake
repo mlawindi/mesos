@@ -59,34 +59,29 @@ if (WIN32)
     ${STOUT_TEST_DEPENDENCIES}
     ${CURL_TARGET}
   )
-endif(WIN32)
+endif (WIN32)
 
 # DEFINE THIRD-PARTY INCLUDE DIRECTORIES. Tells compiler toolchain where to get
 # headers for our third party libs (e.g., -I/path/to/glog on Linux)..
 ###############################################################################
 set(STOUT_TEST_INCLUDE_DIRS
   ${STOUT_TEST_INCLUDE_DIRS}
-  ${STOUT}/include
-  ${BOOST_ROOT}
-  ${PICOJSON_ROOT}
+  ${STOUT_INCLUDE_DIR}
+  ${BOOST_INCLUDE_DIR}
+  ${PICOJSON_INCLUDE_DIR}
   ${APR_INCLUDE_DIR}
   ${SVN_INCLUDE_DIR}
   ${GMOCK_ROOT}/include
   ${GTEST_SRC}/include
   ${PROTOBUF_LIB}/include
   src
+  ${GLOG_INCLUDE_DIR}
   )
 
 if (WIN32)
   set(STOUT_TEST_INCLUDE_DIRS
     ${STOUT_TEST_INCLUDE_DIRS}
-    ${GLOG_ROOT}/src/windows
-    ${CURL_ROOT}/include
-    )
-else (WIN32)
-  set(STOUT_TEST_INCLUDE_DIRS
-    ${STOUT_TEST_INCLUDE_DIRS}
-    ${GLOG_LIB}/include
+    ${CURL_INCLUDE_DIR}
     )
 endif (WIN32)
 
@@ -100,25 +95,19 @@ set(STOUT_TEST_LIB_DIRS
   ${SVN_LIBS}
   ${GMOCK_ROOT}-build/lib/.libs
   ${GMOCK_ROOT}-build/gtest/lib/.libs
+  ${GLOG_LIB_DIR}
   )
 
 if (WIN32)
-  # TODO(hausdorff): currently these dependencies have to be built out-of-band
-  # by opening Visual Studio, building the project, and then building Mesos. We
-  # should write batch scripts that will build these dependencies from the
-  # command line. (This is one reason why we're linking to the Debug/ folders,
-  # which is not a good idea for release builds anyway.)
   set(STOUT_TEST_LIB_DIRS
     ${STOUT_TEST_LIB_DIRS}
-    ${GLOG_ROOT}/Debug
     ${GMOCK_ROOT}/msvc/2010/Debug
     ${PROTOBUF_ROOT}/vsprojects/Debug
-    ${CURL_ROOT}/lib
+    ${CURL_LIB_DIR}
     )
 else (WIN32)
   set(STOUT_TEST_LIB_DIRS
     ${STOUT_TEST_LIB_DIRS}
-    ${GLOG_LIB}/lib
     ${PROTOBUF_LIB}/lib
     )
 endif (WIN32)
@@ -131,6 +120,7 @@ set(STOUT_TEST_LIBS
   ${CMAKE_THREAD_LIBS_INIT}
   gmock
   ${SVN_LIBS}
+  ${GLOG_LFLAG}
   )
 
 if (WIN32)
@@ -141,14 +131,12 @@ if (WIN32)
   # assumes the library names are generated correctly.
   set(STOUT_TEST_LIBS
     ${STOUT_TEST_LIBS}
-    libglog
     libprotobuf
-    libcurl_a
+    ${CURL_LFLAG}
     )
 else (WIN32)
   set(STOUT_TEST_LIBS
     ${STOUT_TEST_LIBS}
-    glog
     gtest
     protobuf
     dl
