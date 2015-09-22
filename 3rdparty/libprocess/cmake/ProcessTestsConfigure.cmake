@@ -41,6 +41,38 @@ set(GPERFTOOLS_VERSION 2.0)
 set(GPERFTOOLS         ${PROCESS_3RD_BIN}/gperftools-${GPERFTOOLS_VERSION})
 set(PROTOBUF_LIB       ${PROTOBUF_ROOT}-lib/lib)
 
+# Convenience variables for include directories of third-party dependencies.
+set(GMOCK_INCLUDE_DIR    ${GMOCK_ROOT}/include)
+set(GTEST_INCLUDE_DIR    ${GTEST_SRC}/include)
+set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_LIB}/include)
+
+# Convenience variables for `lib` directories of built third-party dependencies.
+set(GTEST_LIB_DIR ${GMOCK_ROOT}-build/gtest/lib/.libs)
+
+if (WIN32)
+  set(GMOCK_LIB_DIR    ${GMOCK_ROOT}/msvc/2010/Debug)
+  set(PROTOBUF_LIB_DIR ${PROTOBUF_ROOT}/vsprojects/Debug)
+else (WIN32)
+  set(GMOCK_LIB_DIR    ${GMOCK_ROOT}-build/lib/.libs)
+  set(PROTOBUF_LIB_DIR ${PROTOBUF_LIB}/lib)
+endif (WIN32)
+
+# Convenience variables for "lflags", the symbols we pass to CMake to generate
+# things like `-L/path/to/glog` or `-lglog`.
+set(GMOCK_LFLAG gmock)
+set(GTEST_LFLAG gtest)
+
+if (WIN32)
+  # Necessary because the lib names for (e.g.) pb are generated incorrectly
+  # on Windows. That is, on *nix, the pb binary should be (e.g.) protobuf.so,
+  # and on Windows it should be protobuf.lib. But on Windows, it's actually
+  # libprotobuf.lib. Hence, we have to special case it here because CMake
+  # assumes the library names are generated correctly.
+  set(PROTOBUF_LFLAG libprotobuf)
+else (WIN32)
+  set(PROTOBUF_LFLAG protobuf)
+endif (WIN32)
+
 # COMPILER CONFIGURATION.
 #########################
 if (APPLE)
@@ -66,8 +98,8 @@ set(PROCESS_TEST_INCLUDE_DIRS
   ${PROCESS_TEST_INCLUDE_DIRS}
   ../   # includes, e.g., decoder.hpp
   ${PROCESS_INCLUDE_DIRS}
-  ${GMOCK_ROOT}/include
-  ${GTEST_SRC}/include
+  ${GMOCK_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR}
   src
   )
 
@@ -78,8 +110,8 @@ set(PROCESS_TEST_INCLUDE_DIRS
 set(PROCESS_TEST_LIB_DIRS
   ${PROCESS_TEST_LIB_DIRS}
   ${PROCESS_LIB_DIRS}
-  ${GMOCK_ROOT}-build/lib/.libs
-  ${GMOCK_ROOT}-build/gtest/lib/.libs
+  ${GMOCK_LIB_DIR}
+  ${GTEST_LIB_DIR}
   )
 
 # DEFINE THIRD-PARTY LIBS. Used to generate flags that the linker uses to
@@ -88,6 +120,6 @@ set(PROCESS_TEST_LIB_DIRS
 set(PROCESS_TEST_LIBS
   ${PROCESS_TEST_LIBS}
   ${PROCESS_LIBS}
-  gmock
-  gtest
+  ${GMOCK_LFLAG}
+  ${GTEST_LFLAG}
   )
