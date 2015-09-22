@@ -55,10 +55,7 @@ set(STOUT_TEST_DEPENDENCIES
   )
 
 if (WIN32)
-  set(STOUT_TEST_DEPENDENCIES
-    ${STOUT_TEST_DEPENDENCIES}
-    ${CURL_TARGET}
-  )
+  set(STOUT_TEST_DEPENDENCIES ${STOUT_TEST_DEPENDENCIES} ${CURL_TARGET})
 endif (WIN32)
 
 # DEFINE THIRD-PARTY INCLUDE DIRECTORIES. Tells compiler toolchain where to get
@@ -71,18 +68,15 @@ set(STOUT_TEST_INCLUDE_DIRS
   ${PICOJSON_INCLUDE_DIR}
   ${APR_INCLUDE_DIR}
   ${SVN_INCLUDE_DIR}
-  ${GMOCK_ROOT}/include
-  ${GTEST_SRC}/include
-  ${PROTOBUF_LIB}/include
+  ${GMOCK_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR}
+  ${PROTOBUF_INCLUDE_DIR}
   src
   ${GLOG_INCLUDE_DIR}
   )
 
 if (WIN32)
-  set(STOUT_TEST_INCLUDE_DIRS
-    ${STOUT_TEST_INCLUDE_DIRS}
-    ${CURL_INCLUDE_DIR}
-    )
+  set(STOUT_TEST_INCLUDE_DIRS ${STOUT_TEST_INCLUDE_DIRS} ${CURL_INCLUDE_DIR})
 endif (WIN32)
 
 # DEFINE THIRD-PARTY LIB INSTALL DIRECTORIES. Used to tell the compiler
@@ -93,23 +87,14 @@ set(STOUT_TEST_LIB_DIRS
   ${STOUT_TEST_LIB_DIRS}
   ${APR_LIBS}
   ${SVN_LIBS}
-  ${GMOCK_ROOT}-build/lib/.libs
+  ${GMOCK_LIB_DIR}
   ${GMOCK_ROOT}-build/gtest/lib/.libs
   ${GLOG_LIB_DIR}
+  ${PROTOBUF_LIB_DIR}
   )
 
 if (WIN32)
-  set(STOUT_TEST_LIB_DIRS
-    ${STOUT_TEST_LIB_DIRS}
-    ${GMOCK_ROOT}/msvc/2010/Debug
-    ${PROTOBUF_ROOT}/vsprojects/Debug
-    ${CURL_LIB_DIR}
-    )
-else (WIN32)
-  set(STOUT_TEST_LIB_DIRS
-    ${STOUT_TEST_LIB_DIRS}
-    ${PROTOBUF_LIB}/lib
-    )
+  set(STOUT_TEST_LIB_DIRS ${STOUT_TEST_LIB_DIRS} ${CURL_LIB_DIR})
 endif (WIN32)
 
 # DEFINE THIRD-PARTY LIBS. Used to generate flags that the linker uses to
@@ -118,9 +103,10 @@ endif (WIN32)
 set(STOUT_TEST_LIBS
   ${STOUT_TEST_LIBS}
   ${CMAKE_THREAD_LIBS_INIT}
-  gmock
+  ${GMOCK_LFLAG}
   ${SVN_LIBS}
   ${GLOG_LFLAG}
+  ${PROTOBUF_LFLAG}
   )
 
 if (WIN32)
@@ -129,16 +115,11 @@ if (WIN32)
   # libglog.so, and on Windows it should be glog.lib. But on Windows, it's
   # actually libglog.lib. Hence, we have to special case it here because CMake
   # assumes the library names are generated correctly.
-  set(STOUT_TEST_LIBS
-    ${STOUT_TEST_LIBS}
-    libprotobuf
-    ${CURL_LFLAG}
-    )
+  set(STOUT_TEST_LIBS ${STOUT_TEST_LIBS} ${CURL_LFLAG})
 else (WIN32)
   set(STOUT_TEST_LIBS
     ${STOUT_TEST_LIBS}
-    gtest
-    protobuf
+    ${GTEST_LFLAG}
     dl
     apr-1
     )
