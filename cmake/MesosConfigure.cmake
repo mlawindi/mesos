@@ -114,7 +114,7 @@ endif (WIN32)
 ############################
 # NOTE: The third-party configuration variables exported here are used
 # throughout the project, so it's important that this config script goes here.
-include(ProcessConfigure)
+include(Process3rdpartyConfigure)
 
 # Generate a batch script that will build Mesos. Any project referencing Mesos
 # can then build it by calling this script.
@@ -131,6 +131,8 @@ endif (WIN32)
 
 # Add preprocessor definitions required to build third-party libraries.
 #######################################################################
+add_definitions(-DPKGLIBEXECDIR="WARNINGDONOTUSEME")
+
 # Enable the INT64 support for PicoJSON.
 add_definitions(-DPICOJSON_USE_INT64)
 # NOTE: PicoJson requires __STDC_FORMAT_MACROS to be defined before importing
@@ -138,3 +140,78 @@ add_definitions(-DPICOJSON_USE_INT64)
 # be globally defined so that PicoJson has access to the macros, regardless
 # of the order of inclusion.
 add_definitions(-D__STDC_FORMAT_MACROS)
+
+# CONFIGURE MESOS.
+##################
+set(MESOS_TARGET mesos-${MESOS_PACKAGE_VERSION})
+
+# DEFINE DIRECTORY STRUCTURE FOR THIRD-PARTY LIBS.
+##################################################
+set(MESOS_SRC_DIR     ${CMAKE_SOURCE_DIR}/src)
+set(MESOS_BIN         ${CMAKE_BINARY_DIR})
+set(MESOS_BIN_SRC_DIR ${MESOS_BIN}/src)
+
+# Convenience variables for include directories of third-party dependencies.
+set(MESOS_PUBLIC_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(MESOS_BIN_INCLUDE_DIR    ${CMAKE_BINARY_DIR}/include)
+
+# Make directories that generated Mesos code goes into.
+#######################################################
+add_custom_target(
+  make_bin_include_dir ALL
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${MESOS_BIN_INCLUDE_DIR})
+
+add_custom_target(
+  make_bin_src_dir ALL
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${MESOS_BIN_SRC_DIR})
+
+# Define process library dependencies. Tells the process library build targets
+# download/configure/build all third-party libraries before attempting to build.
+################################################################################
+set(MESOS_DEPENDENCIES
+  ${MESOS_DEPENDENCIES}
+  ${PROCESS_TARGET}
+  ${BOOST_TARGET}
+  ${GLOG_TARGET}
+  ${PICOJSON_TARGET}
+  make_bin_include_dir
+  make_bin_src_dir
+  )
+
+# Define third-party include directories. Tells compiler toolchain where to get
+# headers for our third party libs (e.g., -I/path/to/glog on Linux).
+###############################################################################
+set(MESOS_INCLUDE_DIRS
+  ${MESOS_INCLUDE_DIRS}
+  ${MESOS_PUBLIC_INCLUDE_DIR}
+  # Protobuf headers that depend on mesos.pb.h need this.
+  ${MESOS_PUBLIC_INCLUDE_DIR}/mesos
+  # Contains (e.g.) compiled *.pb.h files.
+  ${MESOS_BIN_INCLUDE_DIR}
+  ${MESOS_BIN_SRC_DIR}
+  ${MESOS_SRC_DIR}
+
+  ${PROCESS_INCLUDE_DIR}
+  ${STOUT_INCLUDE_DIR}
+  ${BOOST_INCLUDE_DIR}
+  ${GLOG_INCLUDE_DIR}
+  ${PICOJSON_INCLUDE_DIR}
+  ${PROTOBUF_INCLUDE_DIR}
+  )
+
+# Define third-party lib install directories. Used to tell the compiler
+# toolchain where to find our third party libs (e.g., -L/path/to/glog on
+# Linux).
+########################################################################
+set(MESOS_LIB_DIRS
+  ${PROCESS_LIB_DIRS}
+  ${GLOG_LIB_DIR}
+  )
+
+# Define third-party libs. Used to generate flags that the linker uses to
+# include our third-party libs (e.g., -lglog on Linux).
+#########################################################################
+set(MESOS_LIBS
+  ${PROCESS_LIBS}
+  ${GLOG_LFLAG}
+  )

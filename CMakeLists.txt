@@ -19,7 +19,13 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(Mesos)
-set(MESOS_PACKAGE_VERSION 0.22.1)
+set(MESOS_MAJOR_VERSION 0)
+set(MESOS_MINOR_VERSION 25)
+set(MESOS_PATCH_VERSION 0)
+set(PACKAGE_VERSION
+  ${MESOS_MAJOR_VERSION}.${MESOS_MINOR_VERSION}.${MESOS_PATCH_VERSION})
+
+set(MESOS_PACKAGE_VERSION ${PACKAGE_VERSION})
 set(MESOS_PACKAGE_SOVERSION 0)
 
 # MESOS BUILD CONFIGURATION OPTIONS.
@@ -43,6 +49,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/libprocess/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/libprocess/cmake/macros)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/src/cmake)
 
 # Macros.
 include(Common)
@@ -57,3 +64,4 @@ include(MesosConfigure)
 # SUBDIRECTORIES.
 #################
 add_subdirectory(3rdparty/libprocess)
+add_subdirectory(src)
