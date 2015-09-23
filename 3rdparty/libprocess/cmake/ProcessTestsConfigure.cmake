@@ -33,45 +33,29 @@
 
 # DIRECTORY STRUCTURE FOR THIRD-PARTY LIBS REQUIRED FOR TEST INFRASTRUCTURE.
 ############################################################################
-EXTERNAL("gmock"    ${GMOCK_VERSION}    "${PROCESS_3RD_BIN}")
-EXTERNAL("protobuf" ${PROTOBUF_VERSION} "${PROCESS_3RD_BIN}")
+EXTERNAL("gmock" ${GMOCK_VERSION} "${PROCESS_3RD_BIN}")
 
 set(GTEST_SRC          ${GMOCK_ROOT}/gtest)
 set(GPERFTOOLS_VERSION 2.0)
 set(GPERFTOOLS         ${PROCESS_3RD_BIN}/gperftools-${GPERFTOOLS_VERSION})
-set(PROTOBUF_LIB       ${PROTOBUF_ROOT}-lib/lib)
 
 # Convenience variables for include directories of third-party dependencies.
-set(GMOCK_INCLUDE_DIR    ${GMOCK_ROOT}/include)
-set(GTEST_INCLUDE_DIR    ${GTEST_SRC}/include)
-set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_LIB}/include)
+set(GMOCK_INCLUDE_DIR ${GMOCK_ROOT}/include)
+set(GTEST_INCLUDE_DIR ${GTEST_SRC}/include)
 
 # Convenience variables for `lib` directories of built third-party dependencies.
 set(GTEST_LIB_DIR ${GMOCK_ROOT}-build/gtest/lib/.libs)
 
 if (WIN32)
   set(GMOCK_LIB_DIR    ${GMOCK_ROOT}/msvc/2010/Debug)
-  set(PROTOBUF_LIB_DIR ${PROTOBUF_ROOT}/vsprojects/Debug)
 else (WIN32)
   set(GMOCK_LIB_DIR    ${GMOCK_ROOT}-build/lib/.libs)
-  set(PROTOBUF_LIB_DIR ${PROTOBUF_LIB}/lib)
 endif (WIN32)
 
 # Convenience variables for "lflags", the symbols we pass to CMake to generate
 # things like `-L/path/to/glog` or `-lglog`.
 set(GMOCK_LFLAG gmock)
 set(GTEST_LFLAG gtest)
-
-if (WIN32)
-  # Necessary because the lib names for (e.g.) pb are generated incorrectly
-  # on Windows. That is, on *nix, the pb binary should be (e.g.) protobuf.so,
-  # and on Windows it should be protobuf.lib. But on Windows, it's actually
-  # libprotobuf.lib. Hence, we have to special case it here because CMake
-  # assumes the library names are generated correctly.
-  set(PROTOBUF_LFLAG libprotobuf)
-else (WIN32)
-  set(PROTOBUF_LFLAG protobuf)
-endif (WIN32)
 
 # COMPILER CONFIGURATION.
 #########################
@@ -87,7 +71,6 @@ endif (APPLE)
 set(PROCESS_TEST_DEPENDENCIES
   ${PROCESS_TEST_DEPENDENCIES}
   ${PROCESS_DEPENDENCIES}
-  ${PROTOBUF_TARGET}
   ${GMOCK_TARGET}
   )
 

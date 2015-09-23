@@ -57,6 +57,7 @@ EXTERNAL("http_parser" ${HTTP_PARSER_VERSION} "${PROCESS_3RD_BIN}")
 EXTERNAL("libev"       ${LIBEV_VERSION}       "${PROCESS_3RD_BIN}")
 EXTERNAL("libevent"    ${LIBEVENT_VERSION}    "${PROCESS_3RD_BIN}")
 EXTERNAL("libapr"      ${LIBAPR_VERSION}      "${PROCESS_3RD_BIN}")
+EXTERNAL("protobuf"    ${PROTOBUF_VERSION}    "${PROCESS_3RD_BIN}")
 
 if (NOT WIN32)
   EXTERNAL("glog" ${GLOG_VERSION} "${PROCESS_3RD_BIN}")
@@ -69,7 +70,9 @@ elseif (WIN32)
   # manager), but Windows has no package manager, so we have to go get it.
   EXTERNAL("curl" ${CURL_VERSION} "${PROCESS_3RD_BIN}")
 endif (NOT WIN32)
+
 set(GLOG_LIB_ROOT ${GLOG_ROOT}-lib/lib)
+set(PROTOBUF_LIB  ${PROTOBUF_ROOT}-lib/lib)
 
 # Convenience variables for include directories of third-party dependencies.
 set(PROCESS_INCLUDE_DIR     ${PROCESS_3RD_SRC}/../include)
@@ -80,6 +83,7 @@ set(GPERFTOOLS_INCLUDE_DIR  ${GPERFTOOLS}/src)
 set(HTTP_PARSER_INCLUDE_DIR ${HTTP_PARSER_ROOT})
 set(LIBEV_INCLUDE_DIR       ${LIBEV_ROOT})
 set(PICOJSON_INCLUDE_DIR    ${PICOJSON_ROOT})
+set(PROTOBUF_INCLUDE_DIR    ${PROTOBUF_LIB}/include)
 
 if (WIN32)
   set(CURL_INCLUDE_DIR ${CURL_ROOT}/include)
@@ -93,10 +97,12 @@ set(HTTP_PARSER_LIB_DIR ${HTTP_PARSER_ROOT}-build)
 set(LIBEV_LIB_DIR       ${LIBEV_ROOT}-build/.libs)
 
 if (WIN32)
-  set(CURL_LIB_DIR ${CURL_ROOT}/lib)
-  set(GLOG_LIB_DIR ${GLOG_ROOT}/Debug)
+  set(CURL_LIB_DIR     ${CURL_ROOT}/lib)
+  set(GLOG_LIB_DIR     ${GLOG_ROOT}/Debug)
+  set(PROTOBUF_LIB_DIR ${PROTOBUF_ROOT}/vsprojects/Debug)
 else (WIN32)
-  set(GLOG_LIB_DIR ${GLOG_LIB_ROOT}/lib)
+  set(GLOG_LIB_DIR     ${GLOG_LIB_ROOT}/lib)
+  set(PROTOBUF_LIB_DIR ${PROTOBUF_LIB}/lib)
 endif (WIN32)
 
 # Convenience variables for "lflags", the symbols we pass to CMake to generate
@@ -110,11 +116,16 @@ if (WIN32)
   # and on Windows it should be glog.lib. But on Windows, it's actually
   # libglog.lib. Hence, we have to special case it here because CMake assumes
   # the library names are generated correctly.
-  set(CURL_LFLAG libcurl_a)
-  set(GLOG_LFLAG libglog)
+  set(CURL_LFLAG     libcurl_a)
+  set(GLOG_LFLAG     libglog)
+  set(PROTOBUF_LFLAG libprotobuf)
 else (WIN32)
-  set(GLOG_LFLAG glog)
+  set(GLOG_LFLAG     glog)
+  set(PROTOBUF_LFLAG protobuf)
 endif (WIN32)
+
+# Convenience variable for `protoc`, the Protobuf compiler.
+set(PROTOC ${PROTOBUF_LIB}/bin/protoc)
 
 # Define process library dependencies. Tells the process library build targets
 # download/configure/build all third-party libraries before attempting to build.
@@ -126,6 +137,7 @@ set(PROCESS_DEPENDENCIES
   ${PICOJSON_TARGET}
   ${HTTP_PARSER_TARGET}
   ${LIBEV_TARGET}
+  ${PROTOBUF_TARGET}
   )
 
 # Define third-party include directories. Tells compiler toolchain where to get
