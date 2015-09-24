@@ -114,6 +114,7 @@ endif (WIN32)
 ############################
 # NOTE: The third-party configuration variables exported here are used
 # throughout the project, so it's important that this config script goes here.
+include(Mesos3rdpartyConfigure)
 include(Process3rdpartyConfigure)
 
 # Generate a batch script that will build Mesos. Any project referencing Mesos
@@ -132,6 +133,8 @@ endif (WIN32)
 # Add preprocessor definitions required to build third-party libraries.
 #######################################################################
 add_definitions(-DPKGLIBEXECDIR="WARNINGDONOTUSEME")
+add_definitions(-DLIBDIR="WARNINGDONOTUSEME")
+add_definitions(-DVERSION="WARNINGDONOTUSEME")
 
 # Enable the INT64 support for PicoJSON.
 add_definitions(-DPICOJSON_USE_INT64)
@@ -174,6 +177,7 @@ set(MESOS_DEPENDENCIES
   ${BOOST_TARGET}
   ${GLOG_TARGET}
   ${PICOJSON_TARGET}
+  ${ZOOKEEPER_TARGET}
   make_bin_include_dir
   make_bin_src_dir
   )
@@ -197,6 +201,7 @@ set(MESOS_INCLUDE_DIRS
   ${GLOG_INCLUDE_DIR}
   ${PICOJSON_INCLUDE_DIR}
   ${PROTOBUF_INCLUDE_DIR}
+  ${ZOOKEEPER_INCLUDE_DIR}
   )
 
 # Define third-party lib install directories. Used to tell the compiler
@@ -206,6 +211,7 @@ set(MESOS_INCLUDE_DIRS
 set(MESOS_LIB_DIRS
   ${PROCESS_LIB_DIRS}
   ${GLOG_LIB_DIR}
+  ${ZOOKEEPER_LIB_DIR}
   )
 
 # Define third-party libs. Used to generate flags that the linker uses to
