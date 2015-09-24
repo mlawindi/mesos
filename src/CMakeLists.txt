@@ -145,7 +145,7 @@ configure_file(
 
 # SOURCE FILES FOR THE MESOS LIBRARY.
 #####################################
-set(SLAVE_SRC
+set(AGENT_SRC
   slave/constants.cpp
   slave/gc.cpp
   slave/flags.cpp
@@ -187,14 +187,14 @@ set(SLAVE_SRC
 
 set(MESOS_SRC
   ${MESOS_SRC}
-  ${SLAVE_SRC}
+  ${AGENT_SRC}
   ${MESOS_PROTOBUF_SRC}
   )
 
 # INCLUDE DIRECTIVES FOR MESOS LIBRARY (generates, e.g., -I/path/to/thing
 # on Linux).
 #########################################################################
-include_directories(${MESOS_INCLUDE_DIRS})
+include_directories(${AGENT_INCLUDE_DIRS})
 
 # THE MESOS LIBRARY (generates, e.g., libmesos.so, etc., on Linux).
 ###################################################################
@@ -204,4 +204,4 @@ set_target_properties(
   VERSION ${MESOS_PACKAGE_VERSION}
   SOVERSION ${MESOS_PACKAGE_SOVERSION}
   )
-add_dependencies(${MESOS_TARGET} ${MESOS_DEPENDENCIES})
+add_dependencies(${MESOS_TARGET} ${AGENT_DEPENDENCIES})
