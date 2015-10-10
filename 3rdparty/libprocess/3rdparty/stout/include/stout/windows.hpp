@@ -19,6 +19,7 @@
 #include <fcntl.h>  // For file access flags like `_O_CREAT`.
 #include <io.h>     // For _read/_write
 
+#include <BaseTsd.h> // For `SSIZE_T`.
 #include <Winsock2.h>
 #include <Windows.h>
 
@@ -77,6 +78,8 @@ typedef int mode_t;
 // `DWORD` is expected to be the type holding PIDs throughout the Windows API,
 // including functions like `OpenProcess`.
 typedef DWORD pid_t;
+
+typedef SSIZE_T ssize_t;
 
 // File I/O function aliases.
 //
