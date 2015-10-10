@@ -25,6 +25,8 @@
 
 #include <stout/thread_local.hpp>
 
+namespace stout {
+
 struct UUID : boost::uuids::uuid
 {
 public:
@@ -71,6 +73,10 @@ private:
   explicit UUID(const boost::uuids::uuid& uuid)
     : boost::uuids::uuid(uuid) {}
 };
+
+} // namespace stout {
+
+using stout::UUID;
 
 namespace std {
 
