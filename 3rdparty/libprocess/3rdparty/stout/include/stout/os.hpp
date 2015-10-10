@@ -85,6 +85,7 @@
 #include <stout/os/shell.hpp>
 #include <stout/os/signals.hpp>
 #include <stout/os/stat.hpp>
+#include <stout/os/write.hpp>
 #ifdef __APPLE__
 #include <stout/os/sysctl.hpp>
 #endif // __APPLE__
@@ -182,30 +183,6 @@ inline Try<std::string> mktemp(const std::string& path = "/tmp/XXXXXX")
   std::string result(temp);
   delete[] temp;
   return result;
-}
-
-
-// Write out the string to the file at the current fd position.
-inline Try<Nothing> write(int fd, const std::string& message)
-{
-  size_t offset = 0;
-
-  while (offset < message.length()) {
-    ssize_t length =
-      ::write(fd, message.data() + offset, message.length() - offset);
-
-    if (length < 0) {
-      // TODO(benh): Handle a non-blocking fd? (EAGAIN, EWOULDBLOCK)
-      if (errno == EINTR) {
-        continue;
-      }
-      return ErrnoError();
-    }
-
-    offset += length;
-  }
-
-  return Nothing();
 }
 
 
