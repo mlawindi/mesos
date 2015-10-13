@@ -14,6 +14,8 @@
 
 #include <netinet/tcp.h>
 
+#include <stout/os/sendfile.hpp>
+
 #include <process/io.hpp>
 #include <process/network.hpp>
 #include <process/socket.hpp>
