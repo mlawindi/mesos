@@ -89,6 +89,8 @@
 #include <stout/os/stat.hpp>
 #include <stout/os/write.hpp>
 
+#include <stout/os/environment.hpp>
+
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specifc system calls into separate directories.
@@ -101,24 +103,6 @@
 
 
 namespace os {
-
-inline std::map<std::string, std::string> environment()
-{
-  char** environ = os::raw::environment();
-
-  std::map<std::string, std::string> result;
-
-  for (size_t index = 0; environ[index] != NULL; index++) {
-    std::string entry(environ[index]);
-    size_t position = entry.find_first_of('=');
-    if (position == std::string::npos) {
-      continue; // Skip malformed environment entries.
-    }
-    result[entry.substr(0, position)] = entry.substr(position + 1);
-  }
-
-  return result;
-}
 
 
 // Looks in the environment variables for the specified key and
