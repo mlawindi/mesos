@@ -162,6 +162,7 @@ set(SCHEDULER_SRC
 set(AGENT_SRC
   ${AGENT_SRC}
   slave/constants.cpp
+  slave/flags.cpp
   slave/state.cpp
   )
 
@@ -169,7 +170,6 @@ if (NOT WIN32)
   set(AGENT_SRC
     ${AGENT_SRC}
     slave/gc.cpp
-    slave/flags.cpp
     slave/http.cpp
     slave/metrics.cpp
     slave/monitor.cpp
@@ -237,6 +237,7 @@ set(ZOOKEEPER_SRC
 set(MESOS_SRC
   ${MESOS_SRC}
   ${AGENT_SRC}
+  ${MESOS_PROTOBUF_SRC}
   )
 
 if (NOT WIN32)
@@ -261,7 +262,6 @@ if (NOT WIN32)
     ${VERSION_SRC}
     ${WATCHER_SRC}
     ${ZOOKEEPER_SRC}
-    ${MESOS_PROTOBUF_SRC}
     )
 endif (NOT WIN32)
 
