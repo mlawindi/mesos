@@ -78,6 +78,7 @@ nobase_include_HEADERS =		\
   stout/os/open.hpp			\
   stout/os/os.hpp			\
   stout/os/osx.hpp			\
+  stout/os/mktemp.hpp			\
   stout/os/process.hpp			\
   stout/os/read.hpp			\
   stout/os/realpath.hpp			\
