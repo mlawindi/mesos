@@ -79,8 +79,9 @@
 #include <stout/os/fork.hpp>
 #include <stout/os/killtree.hpp>
 #include <stout/os/ls.hpp>
-#include <stout/os/permissions.hpp>
+#include <stout/os/mkdir.hpp>
 #include <stout/os/os.hpp>
+#include <stout/os/permissions.hpp>
 #include <stout/os/read.hpp>
 #include <stout/os/realpath.hpp>
 #include <stout/os/rename.hpp>
@@ -157,34 +158,6 @@ inline Try<std::string> mktemp(const std::string& path = "/tmp/XXXXXX")
   std::string result(temp);
   delete[] temp;
   return result;
-}
-
-
-inline Try<Nothing> mkdir(const std::string& directory, bool recursive = true)
-{
-  if (!recursive) {
-    if (::mkdir(directory.c_str(), 0755) < 0) {
-      return ErrnoError();
-    }
-  } else {
-    std::vector<std::string> tokens = strings::tokenize(directory, "/");
-    std::string path = "";
-
-    // We got an absolute path, so keep the leading slash.
-    if (directory.find_first_of("/") == 0) {
-      path = "/";
-    }
-
-    foreach (const std::string& token, tokens) {
-      path += token;
-      if (::mkdir(path.c_str(), 0755) < 0 && errno != EEXIST) {
-        return ErrnoError();
-      }
-      path += "/";
-    }
-  }
-
-  return Nothing();
 }
 
 
