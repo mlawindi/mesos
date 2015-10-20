@@ -118,6 +118,13 @@ decltype(_mkdir(path))
 }
 
 
+inline auto mktemp(char* path) ->
+decltype(_mktemp(path))
+{
+  return _mktemp(path);
+}
+
+
 inline auto mkstemp(char* path) ->
 decltype(_mktemp_s(path, strlen(path) + 1))
 {

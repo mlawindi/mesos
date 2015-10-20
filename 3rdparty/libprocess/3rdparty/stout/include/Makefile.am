@@ -80,6 +80,7 @@ nobase_include_HEADERS =		\
   stout/os/os.hpp			\
   stout/os/osx.hpp			\
   stout/os/mkdir.hpp			\
+  stout/os/mktemp.hpp			\
   stout/os/permissions.hpp		\
   stout/os/process.hpp			\
   stout/os/pstree.hpp			\
