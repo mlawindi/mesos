@@ -55,6 +55,7 @@ nobase_include_HEADERS =		\
   stout/os/bootid.hpp			\
   stout/os/chdir.hpp			\
   stout/os/close.hpp			\
+  stout/os/constants.hpp		\
   stout/os/environment.hpp		\
   stout/os/exists.hpp			\
   stout/os/fcntl.hpp			\
@@ -80,8 +81,11 @@ nobase_include_HEADERS =		\
   stout/os/open.hpp			\
   stout/os/os.hpp			\
   stout/os/osx.hpp			\
+  stout/os/mkdir.hpp			\
   stout/os/mktemp.hpp			\
+  stout/os/permissions.hpp		\
   stout/os/process.hpp			\
+  stout/os/pstree.hpp			\
   stout/os/read.hpp			\
   stout/os/realpath.hpp			\
   stout/os/rename.hpp			\
@@ -90,8 +94,6 @@ nobase_include_HEADERS =		\
   stout/os/shell.hpp			\
   stout/os/signals.hpp			\
   stout/os/stat.hpp			\
-  stout/os/permissions.hpp		\
-  stout/os/pstree.hpp			\
   stout/os/sysctl.hpp			\
   stout/os/touch.hpp			\
   stout/os/utime.hpp			\
