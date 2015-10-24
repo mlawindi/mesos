@@ -245,6 +245,7 @@ set(ZOOKEEPER_SRC
 set(MESOS_SRC
   ${MESOS_SRC}
   ${AGENT_SRC}
+  ${MESOS_PROTOBUF_SRC}
   )
 
 if (NOT WIN32)
@@ -269,7 +270,6 @@ if (NOT WIN32)
     ${VERSION_SRC}
     ${WATCHER_SRC}
     ${ZOOKEEPER_SRC}
-    ${MESOS_PROTOBUF_SRC}
     )
 endif (NOT WIN32)
 
