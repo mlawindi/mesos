@@ -69,7 +69,6 @@ inline Try<std::list<std::string>> ls(const std::string& directory)
   closedir(dir);
 
   if (error != 0) {
-    errno = error;
     return ErrnoError("Failed to read directories");
   }
 
