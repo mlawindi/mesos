@@ -166,7 +166,9 @@ index 0000000..9554f4a
 +</Project>
 \ No newline at end of file
 diff --git a/src/c/include/recordio.h b/src/c/include/recordio.h
-index 4e1b78e..90f458b 100644
+old mode 100644
+new mode 100755
+index 4e1b78e..4e87e7b
 --- a/src/c/include/recordio.h
 +++ b/src/c/include/recordio.h
 @@ -73,7 +73,7 @@ void close_buffer_iarchive(struct iarchive **ia);
@@ -174,30 +176,60 @@ index 4e1b78e..90f458b 100644
  int get_buffer_len(struct oarchive *);
  
 -int64_t htonll(int64_t v);
-+int64_t zoo_htonll(int64_t v);
++uint64_t htonll(uint64_t v);
  
  #ifdef __cplusplus
  }
 diff --git a/src/c/include/winconfig.h b/src/c/include/winconfig.h
 old mode 100644
 new mode 100755
-index a68dcc6..8fc1c73
+index a68dcc6..ce6d8ad
 --- a/src/c/include/winconfig.h
 +++ b/src/c/include/winconfig.h
 @@ -176,7 +176,9 @@
  #define localtime_r(a,b) localtime_s(b,a)
  #define get_errno() errno=GetLastError()
  #define random rand
+-#define snprintf _snprintf
 +#if ((defined(_MSC_VER) && _MSC_VER < 1900) || !defined(_MSC_VER)) // Define snprintf if VS version is less than 2015
- #define snprintf _snprintf
++#define snprintf _snprintf
 +#endif
  
  #define ACL ZKACL  // Conflict with windows API
  
+@@ -187,5 +189,5 @@
+ #define EWOULDBLOCK WSAEWOULDBLOCK
+ #define EINPROGRESS WSAEINPROGRESS
+ 
+-typedef int pid_t;
++typedef DWORD pid_t;
+ #endif
+diff --git a/src/c/include/winstdint.h b/src/c/include/winstdint.h
+old mode 100644
+new mode 100755
+index d02608a..25c8444
+--- a/src/c/include/winstdint.h
++++ b/src/c/include/winstdint.h
+@@ -101,6 +101,7 @@ typedef uint32_t  uint_least32_t;
+ typedef uint64_t  uint_least64_t;
+ 
+ // 7.18.1.3 Fastest minimum-width integer types
++#ifndef __STDC_CONSTANT_MACROS
+ typedef int8_t    int_fast8_t;
+ typedef int16_t   int_fast16_t;
+ typedef int32_t   int_fast32_t;
+@@ -109,6 +110,7 @@ typedef uint8_t   uint_fast8_t;
+ typedef uint16_t  uint_fast16_t;
+ typedef uint32_t  uint_fast32_t;
+ typedef uint64_t  uint_fast64_t;
++#endif
+ 
+ // 7.18.1.4 Integer types capable of holding object pointers
+ #ifdef _WIN64 // [
 diff --git a/src/c/src/mt_adaptor.c b/src/c/src/mt_adaptor.c
 old mode 100644
 new mode 100755
-index 974063f..bcbe444
+index 974063f..15c05c0
 --- a/src/c/src/mt_adaptor.c
 +++ b/src/c/src/mt_adaptor.c
 @@ -491,17 +491,7 @@ int32_t fetch_and_add(volatile int32_t* operand, int incr)
@@ -215,7 +247,7 @@ index 974063f..bcbe444
 -        mov result, ecx; // result = ebx;        
 -     }
 -     return result;    
-+	return InterlockedExchangeAdd(operand, incr);
++	return _InterlockedExchangeAdd(operand, incr);
  #endif
  }
  
