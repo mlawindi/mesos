@@ -42,16 +42,23 @@ if (NOT WIN32)
     ${MESOS_3RDPARTY_SRC}/zookeeper-${ZOOKEEPER_VERSION}.patch
     ZOOKEEPER_PATCH_CMD)
 elseif (WIN32)
-  set(ZOOKEEPER_PATCH_CMD   ${CMAKE_NOOP})
-  set(ZOOKEEPER_CONFIG_CMD  ${CMAKE_NOOP})
-  set(ZOOKEEPER_BUILD_CMD   ${CMAKE_NOOP})
+  set(ZOOKEEPER_PATCH_CMD ${GNUWIN32_PATCH_EXECUTABLE} --binary -p1 < ${MESOS_3RDPARTY_SRC}/zookeeper-${ZOOKEEPER_VERSION}.patch)   
+
+  VS_BUILD_CMD(
+      ZOOKEEPER
+      ${ZOOKEEPER_C_ROOT}/zookeeper-vs2015.sln
+      ${CMAKE_BUILD_TYPE}
+      "")
+
+  set(ZOOKEEPER_CONFIG_CMD  ${CMAKE_NOOP})  
   set(ZOOKEEPER_INSTALL_CMD ${CMAKE_NOOP})
 endif (NOT WIN32)
 
 # Third-party libraries. Tell the build system how to pull in and build third-
 # party libraries at compile time, using the ExternalProject_Add macro.
 ##############################################################################
-ExternalProject_Add(
+
+ExternalProject_Add(  
   ${ZOOKEEPER_TARGET}
   PREFIX            ${ZOOKEEPER_CMAKE_ROOT}
   PATCH_COMMAND     ${ZOOKEEPER_PATCH_CMD}
@@ -59,4 +66,4 @@ ExternalProject_Add(
   BUILD_COMMAND     ${ZOOKEEPER_BUILD_CMD}
   INSTALL_COMMAND   ${ZOOKEEPER_INSTALL_CMD}
   URL               ${ZOOKEEPER_URL}
-  )
+  ) 
